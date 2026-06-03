@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>(R)Eider Cup 2026 – Aufstellung</title>
+<meta name="theme-color" content="#7f1d1d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="(R)Eider Cup">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%237f1d1d'/%3E%3Ctext x='50' y='64' font-family='Georgia,serif' font-size='46' font-weight='700' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%237f1d1d'/%3E%3Ctext x='50' y='64' font-family='Georgia,serif' font-size='46' font-weight='700' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=DM+Sans:wght@400;500;600;700&display=swap');
+  .display { font-family: 'Fraunces', Georgia, serif; font-optical-sizing: auto; }
+  body { margin: 0; background: #f4f1ea; }
+  .gold-rule { background: linear-gradient(90deg, transparent, #c8a44d, transparent); }
+  input[type="time"] { font-family: 'DM Sans', sans-serif; }
+  /* iOS: Felder >= 16px verhindern das Auto-Zoom beim Antippen */
+  @media (max-width: 640px) {
+    input, select, textarea { font-size: 16px !important; }
+  }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #d6cfc0; border-radius: 8px; }
+  @media print {
+    @page { size: A4; margin: 15mm; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- ====================== APP (React, via Babel) ====================== -->
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useMemo } = React;
+
+window.RC = window.RC || {};
+const STORAGE_KEY = 'reider-cup-2026-cache-v2';
+
+/* ---------- Icons ---------- */
+const Icon = (children) => ({ className = '', ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...p}>{children}</svg>
+);
+const Plus    = Icon(<><path d="M5 12h14"/><path d="M12 5v14"/></>);
+const X       = Icon(<><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>);
+const Users   = Icon(<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>);
+const Flag    = Icon(<><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></>);
+const Target  = Icon(<><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>);
+const Swords  = Icon(<><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></>);
+const Edit2   = Icon(<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>);
+const Check   = Icon(<path d="M20 6 9 17l-5-5"/>);
+const Printer = Icon(<><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></>);
+const Lock    = Icon(<><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>);
+const Search  = Icon(<><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></>);
+const ChevDown= Icon(<path d="m6 9 6 6 6-6"/>);
+const Share2  = Icon(<><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></>);
+const Trophy  = Icon(<><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></>);
+const Alert   = Icon(<><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></>);
+const MapPin  = Icon(<><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></>);
+const Copy    = Icon(<><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></>);
+const Calendar= Icon(<><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></>);
+
+const VIEW_URL = 'https://reidercup.pages.dev/';
+const EVENT_START = new Date('2026-06-12T08:00:00');
+
+/* ---------- Daten ---------- */
+const DAY_META = {
+  day1: { label: 'Tag 1', short: 'FR', date: 'Fr 12.6.', long: 'Freitag, 12. Juni', format: 'Bestball', holes: '9 Loch', holesN: 9, start: '14:30' },
+  day2: { label: 'Tag 2', short: 'SA', date: 'Sa 13.6.', long: 'Samstag, 13. Juni', format: 'Klassischer Vierer', holes: '18 Loch', holesN: 18, start: '11:00' },
+  day3: { label: 'Tag 3', short: 'SO', date: 'So 14.6.', long: 'Sonntag, 14. Juni', format: 'Lochspiel · Einzel', holes: '9 Loch', holesN: 9, start: '12:00' },
+};
+
+const emptyForm = { name: '', hcp: '', available: { day1: true, day2: true, day3: true } };
+
+const testRoster = [
+  { name: 'Jelko',   hcp: 18.1, available: { day1: true,  day2: true,  day3: true  } },
+  { name: 'Henning', hcp: 16.4, available: { day1: true,  day2: true,  day3: true  } },
+  { name: 'Annika',  hcp: 22.7, available: { day1: false, day2: true,  day3: true  } },
+  { name: 'Klaas',   hcp: 28.3, available: { day1: true,  day2: true,  day3: false } },
+  { name: 'Birte',   hcp: 19.6, available: { day1: true,  day2: true,  day3: true  } },
+  { name: 'Torben',  hcp: 15.2, available: { day1: false, day2: true,  day3: true  } },
+  { name: 'Maike',   hcp: 31.5, available: { day1: true,  day2: true,  day3: true  } },
+  { name: 'Detlef',  hcp: 24.8, available: { day1: true,  day2: false, day3: true  } },
+  { name: 'Silke',   hcp: 26.1, available: { day1: true,  day2: true,  day3: true  } },
+  { name: 'Holger',  hcp: 17.3, available: { day1: true,  day2: true,  day3: false } },
+  { name: 'Wibke',   hcp: 33.7, available: { day1: true,  day2: true,  day3: true  } },
+  { name: 'Marten',  hcp: 21.4, available: { day1: false, day2: true,  day3: true  } },
+  { name: 'Insa',    hcp: 29.5, available: { day1: true,  day2: true,  day3: true  } },
+  { name: 'Gerrit',  hcp: 16.8, available: { day1: true,  day2: true,  day3: true  } },
+  { name: 'Heike',   hcp: 27.2, available: { day1: true,  day2: true,  day3: false } },
+  { name: 'Sönke',   hcp: 20.5, available: { day1: true,  day2: true,  day3: true  } },
+  { name: 'Carola',  hcp: 35.4, available: { day1: false, day2: true,  day3: true  } },
+  { name: 'Bjarne',  hcp: 23.6, available: { day1: true,  day2: true,  day3: true  } },
+  { name: 'Frauke',  hcp: 32.1, available: { day1: true,  day2: true,  day3: true  } },
+  { name: 'Ole',     hcp: 19.0, available: { day1: false, day2: true,  day3: true  } },
+];
+
+const defaultData = {
+  roster: testRoster,
+  day1: { pairs: [
+    { own: ['Jelko', 'Klaas'],   opp: ['', ''], time: '' },
+    { own: ['Holger', 'Maike'],  opp: ['', ''], time: '' },
+    { own: ['Birte', 'Heike'],   opp: ['', ''], time: '' },
+    { own: ['Sönke', 'Detlef'],  opp: ['', ''], time: '' },
+  ] },
+  day2: { pairs: [
+    { own: ['Henning', 'Torben'], opp: ['', ''], time: '' },
+    { own: ['Gerrit', 'Jelko'],   opp: ['', ''], time: '' },
+  ] },
+  day3: { matches: [
+    { own: 'Henning', opp: '', time: '' },
+    { own: 'Gerrit',  opp: '', time: '' },
+    { own: 'Torben',  opp: '', time: '' },
+    { own: 'Jelko',   opp: '', time: '' },
+    { own: 'Ole',     opp: '', time: '' },
+    { own: 'Marten',  opp: '', time: '' },
+    { own: 'Annika',  opp: '', time: '' },
+    { own: 'Bjarne',  opp: '', time: '' },
+  ] },
+};
+
+const IMPORT_DATA = {"roster": [{"name": "Werner Bast", "hcp": 50.1, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Michael Behr", "hcp": 33.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Naomi Behr", "hcp": 47.2, "available": {"day1": false, "day2": false, "day3": true}}, {"name": "Wolfgang Belz", "hcp": 26.6, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Emanuel Bertling", "hcp": 23.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Claus Carstens", "hcp": 26.5, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Uwe Florian", "hcp": 37.0, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Peter Freudenthal", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Michael Goltz", "hcp": 22.5, "available": {"day1": false, "day2": true, "day3": true}}, {"name": "Falk Howe", "hcp": 11.0, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Linus Howe", "hcp": 3.8, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Jelko Hubert", "hcp": 18.1, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "John Herrmann Cordes", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Hans-Peter Jönnsson", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Ilona Jönnson", "hcp": 33.0, "available": {"day1": false, "day2": true, "day3": true}}, {"name": "Kai May", "hcp": 17.0, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Frauke Mehret", "hcp": 16.9, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Thomas Mehret", "hcp": 15.7, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Norbert Reiter", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Uwe Schmidt", "hcp": 26.5, "available": {"day1": false, "day2": false, "day3": true}}, {"name": "Jürgen Speetzen", "hcp": 38.1, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Dirk Stoffer", "hcp": 30.4, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Eugen Uhlmann", "hcp": 26.1, "available": {"day1": false, "day2": true, "day3": true}}, {"name": "Klaus-Jürgen Winter", "hcp": 31.5, "available": {"day1": true, "day2": false, "day3": false}}, {"name": "Hauke Witthohn", "hcp": 17.1, "available": {"day1": true, "day2": true, "day3": true}}], "day1": {"pairs": [{"own": ["Jürgen Speetzen", "Wolfgang Belz"], "opp": ["", ""], "time": "14:30"}, {"own": ["Kai May", "Werner Bast"], "opp": ["", ""], "time": "14:40"}, {"own": ["Hauke Witthohn", "Uwe Florian"], "opp": ["", ""], "time": "14:50"}, {"own": ["Jelko Hubert", "Michael Behr"], "opp": ["", ""], "time": "15:00"}, {"own": ["Emanuel Bertling", "Klaus-Jürgen Winter"], "opp": ["", ""], "time": "15:10"}, {"own": ["Claus Carstens", "Dirk Stoffer"], "opp": ["", ""], "time": "15:20"}, {"own": ["Peter Freudenthal", "Norbert Reiter"], "opp": ["", ""], "time": "15:30"}, {"own": ["John Herrmann Cordes", "Hans-Peter Jönnsson"], "opp": ["", ""], "time": "15:40"}]}, "day2": {"pairs": [{"own": ["Linus Howe", "Falk Howe"], "opp": ["", ""], "time": "11:00"}, {"own": ["Thomas Mehret", "Frauke Mehret"], "opp": ["", ""], "time": "11:10"}, {"own": ["Emanuel Bertling", "Eugen Uhlmann"], "opp": ["", ""], "time": "11:20"}, {"own": ["Kai May", "Uwe Florian"], "opp": ["", ""], "time": "11:30"}, {"own": ["Hauke Witthohn", "Michael Behr"], "opp": ["", ""], "time": "11:40"}, {"own": ["Jelko Hubert", "Ilona Jönnson"], "opp": ["", ""], "time": "11:50"}, {"own": ["Michael Goltz", "Dirk Stoffer"], "opp": ["", ""], "time": "12:00"}, {"own": ["Peter Freudenthal", "Norbert Reiter"], "opp": ["", ""], "time": "12:10"}, {"own": ["John Herrmann Cordes", "Hans-Peter Jönnsson"], "opp": ["", ""], "time": "12:20"}]}, "day3": {"matches": [{"own": "Werner Bast", "opp": "", "time": "12:00"}, {"own": "Kai May", "opp": "", "time": "12:08"}, {"own": "Hauke Witthohn", "opp": "", "time": "12:16"}, {"own": "Jelko Hubert", "opp": "", "time": "12:24"}, {"own": "Michael Goltz", "opp": "", "time": "12:32"}, {"own": "Emanuel Bertling", "opp": "", "time": "12:40"}, {"own": "Eugen Uhlmann", "opp": "", "time": "12:48"}, {"own": "Claus Carstens", "opp": "", "time": "12:56"}, {"own": "Peter Freudenthal", "opp": "", "time": "13:04"}, {"own": "John Herrmann Cordes", "opp": "", "time": "13:12"}, {"own": "Hans-Peter Jönnsson", "opp": "", "time": "13:20"}, {"own": "Norbert Reiter", "opp": "", "time": "13:28"}, {"own": "Uwe Schmidt", "opp": "", "time": "13:36"}, {"own": "Wolfgang Belz", "opp": "", "time": "13:44"}, {"own": "Dirk Stoffer", "opp": "", "time": "13:52"}, {"own": "Ilona Jönnson", "opp": "", "time": "14:00"}, {"own": "Michael Behr", "opp": "", "time": "14:08"}, {"own": "Uwe Florian", "opp": "", "time": "14:16"}, {"own": "Jürgen Speetzen", "opp": "", "time": "14:24"}, {"own": "Naomi Behr", "opp": "", "time": "14:32"}]}, "strategy": "standard"};
+
+function normalize(d) {
+  const data = { ...defaultData, ...(d || {}) };
+  ['day1', 'day2'].forEach((day) => {
+    const pairs = (data[day] && data[day].pairs) || [];
+    data[day] = { pairs: pairs.map((p) => ({ own: p.own || ['', ''], opp: p.opp || ['', ''], time: p.time || '', result: p.result || '', holeResults: Array.isArray(p.holeResults) ? p.holeResults : [] })) };
+  });
+  const matches = (data.day3 && data.day3.matches) || [];
+  data.day3 = { matches: matches.map((m) => ({ own: m.own || '', opp: m.opp || '', time: m.time || '', result: m.result || '', holeResults: Array.isArray(m.holeResults) ? m.holeResults : [] })) };
+  data.roster = (data.roster || []).map((p) => ({ name: p.name, hcp: (p.hcp ?? null), available: p.available || { day1: true, day2: true, day3: true } }));
+  data.info = Object.assign({
+    meet: 'Treffen 30 Min vor dem ersten Abschlag am Clubhaus.',
+    address: 'Nordsee-Golfclub St. Peter-Ording, Zum Böhler Strand 31, 25826 St. Peter-Ording',
+    maps: '',
+    notes: ''
+  }, data.info || {});
+  data.strategy = data.strategy || '';
+  return data;
+}
+
+function loadCache() {
+  try { const v = localStorage.getItem(STORAGE_KEY); if (v) return normalize(JSON.parse(v)); } catch (e) {}
+  return normalize(defaultData);
+}
+
+/* Spielplan einer Person aus den Daten errechnen */
+function computeSchedule(data, name) {
+  const e = [];
+  (data.day1.pairs || []).forEach((p) => { if ((p.own || []).includes(name)) e.push({ key: 'day1', time: p.time || '', result: resultOf(p, 9), partner: (p.own.find((n) => n && n !== name) || ''), opp: (p.opp || []).filter(Boolean) }); });
+  (data.day2.pairs || []).forEach((p) => { if ((p.own || []).includes(name)) e.push({ key: 'day2', time: p.time || '', result: resultOf(p, 18), partner: (p.own.find((n) => n && n !== name) || ''), opp: (p.opp || []).filter(Boolean) }); });
+  (data.day3.matches || []).forEach((m) => { if (m.own === name) e.push({ key: 'day3', time: m.time || '', result: resultOf(m, 9), partner: '', opp: [m.opp].filter(Boolean) }); });
+  return e;
+}
+
+// Lochspiel-Auswertung: Stand + Sieger aus den Loch-Ergebnissen ableiten
+function matchOutcome(holeResults, holesN) {
+  const hr = holeResults || [];
+  let red = 0, opp = 0, played = 0;
+  for (let i = 0; i < holesN; i++) { const h = hr[i]; if (h === 'red') { red++; played++; } else if (h === 'opp') { opp++; played++; } else if (h === 'half') { played++; } }
+  const lead = red - opp, remaining = holesN - played, absLead = Math.abs(lead);
+  let point = '', decided = false, label = '';
+  if (played > 0) {
+    if (remaining === 0) { decided = true; point = lead > 0 ? 'red' : lead < 0 ? 'opp' : 'half'; label = lead === 0 ? 'Geteilt' : (lead > 0 ? `Rot gewinnt ${lead} auf` : `Gegner gewinnt ${absLead} auf`); }
+    else if (absLead > remaining) { decided = true; point = lead > 0 ? 'red' : 'opp'; label = `${lead > 0 ? 'Rot' : 'Gegner'} gewinnt ${absLead}&${remaining}`; }
+    else { label = (lead > 0 ? `Rot ${lead} auf` : lead < 0 ? `Gegner ${absLead} auf` : 'ausgeglichen') + ` · nach ${played}`; }
+  }
+  return { red, opp, played, remaining, lead, decided, point, label };
+}
+
+// Punkt einer Begegnung: aus Löchern abgeleitet, sonst manueller Fallback
+function resultOf(item, holesN) {
+  if ((item.holeResults || []).some(Boolean)) return matchOutcome(item.holeResults, holesN).point;
+  return item.result || '';
+}
+
+function computeScore(data) {
+  let red = 0, opp = 0, total = 0, decided = 0;
+  const tally = (r) => { total++; if (r === 'red') { red++; decided++; } else if (r === 'opp') { opp++; decided++; } else if (r === 'half') { red += 0.5; opp += 0.5; decided++; } };
+  (data.day1.pairs || []).forEach((p) => tally(resultOf(p, 9)));
+  (data.day2.pairs || []).forEach((p) => tally(resultOf(p, 18)));
+  (data.day3.matches || []).forEach((m) => tally(resultOf(m, 9)));
+  return { red, opp, total, decided };
+}
+
+function computeConflicts(data) {
+  const issues = [];
+  const avail = (name, day) => { const p = data.roster.find((x) => x.name === name); return !p || (p.available && p.available[day]); };
+  ['day1', 'day2'].forEach((day) => {
+    const seen = {};
+    (data[day].pairs || []).forEach((pr) => {
+      (pr.own || []).forEach((n) => {
+        if (!n) return;
+        if (!avail(n, day)) issues.push(`${n} ist am ${DAY_META[day].short} eingeteilt, aber laut Verfügbarkeit nicht dabei.`);
+        seen[n] = (seen[n] || 0) + 1;
+      });
+    });
+    Object.keys(seen).forEach((n) => { if (seen[n] > 1) issues.push(`${n} ist am ${DAY_META[day].short} in ${seen[n]} Paarungen.`); });
+  });
+  const seen3 = {};
+  (data.day3.matches || []).forEach((m) => { if (!m.own) return; if (!avail(m.own, 'day3')) issues.push(`${m.own} ist am SO eingeteilt, aber laut Verfügbarkeit nicht dabei.`); seen3[m.own] = (seen3[m.own] || 0) + 1; });
+  Object.keys(seen3).forEach((n) => { if (seen3[n] > 1) issues.push(`${n} ist am SO in ${seen3[n]} Matches.`); });
+  return issues;
+}
+
+function fmtPts(n) { return String(n).replace('.', ','); }
+
+function makeQR(text) {
+  try { const qr = window.qrcode(0, 'M'); qr.addData(text); qr.make(); return qr.createDataURL(6, 10); } catch (e) { return ''; }
+}
+
+/* ---------- Strategien: Sonntag-Einzel-Reihenfolge je nach Gegner-Annahme ---------- */
+const STRATEGIES = [
+  { key: 'standard', label: 'Ausgewogen', desc: 'Neutral, wenn Blaus Aufstellung unklar ist: Höchster HCP als Front-„Schwamm" (netto konkurrenzfähig, fängt Blaus Nr. 1 ab), dahinter stark → schwach.' },
+  { key: 'counter', label: 'Konter: Gegner stark zuerst', desc: 'Annahme: Blau schickt – wie beim Ryder-Cup-Comeback – die Stärksten zuerst. Wir setzen die 2 höchsten HCP als „Schwämme" nach vorne und schieben unsere Stärke ins Mittelfeld → klaut dort Matches.' },
+  { key: 'momentum', label: 'Momentum: früh führen', desc: 'Unsere Stärksten zuerst – schnell Punkte aufs Board, Druck aufbauen (gut, wenn man früh in Führung gehen will).' },
+  { key: 'anchor', label: 'Anker: stark zum Schluss', desc: 'Stärkste Spieler ans Ende – für ein knappes Finish, wenn die Entscheidung spät fällt.' },
+];
+
+function buildSundayOrder(roster, mode) {
+  const pool = (roster || []).filter((p) => p.available && p.available.day3);
+  const strong = [...pool].sort((a, b) => (a.hcp == null ? 999 : a.hcp) - (b.hcp == null ? 999 : b.hcp)); // niedriger HCP = stark zuerst
+  const weak = [...strong].reverse();
+  let order;
+  if (mode === 'momentum') order = strong;
+  else if (mode === 'anchor') order = weak;
+  else if (mode === 'counter') { const sp = weak.slice(0, 2); const ids = new Set(sp.map((p) => p.name)); order = [...sp, ...strong.filter((p) => !ids.has(p.name))]; }
+  else { const sp = weak.slice(0, 1); const ids = new Set(sp.map((p) => p.name)); order = [...sp, ...strong.filter((p) => !ids.has(p.name))]; }
+  return order.map((p) => p.name);
+}
+
+function applySundayStrategy(data, mode) {
+  const order = buildSundayOrder(data.roster, mode);
+  const prev = {}; (data.day3.matches || []).forEach((m) => { if (m.own) prev[m.own] = m; });
+  const matches = order.map((n, i) => {
+    const t = 12 * 60 + i * 8;
+    const p = prev[n] || {};
+    return { own: n, opp: p.opp || '', time: String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'), result: p.result || '', holeResults: p.holeResults || [] };
+  });
+  return { ...data, strategy: mode, day3: { matches } };
+}
+
+function timeSeq(start, stepMin, count) {
+  const [h, m] = String(start).split(':').map(Number);
+  const base = (h || 0) * 60 + (m || 0);
+  const out = [];
+  for (let i = 0; i < count; i++) { const t = base + i * stepMin; out.push(String(Math.floor(t / 60) % 24).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0')); }
+  return out;
+}
+
+function ReiderCup() {
+  const [data, setData] = useState(loadCache);
+  const [form, setForm] = useState(emptyForm);
+  const [showForm, setShowForm] = useState(false);
+  const [editingName, setEditingName] = useState(null);
+  const [showManage, setShowManage] = useState(false);
+
+  const [query, setQuery] = useState('');
+  const [comboOpen, setComboOpen] = useState(false);
+  const [detail, setDetail] = useState(null);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [, setTick] = useState(0);
+
+  const [canEdit, setCanEdit] = useState(false);
+  const [uid, setUid] = useState(null);
+  const [ownerConfigured, setOwnerConfigured] = useState(true);
+  const [status, setStatus] = useState('');
+  const [adminEntry] = useState(() => /admin/i.test(window.location.hash));
+
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const applyingRemote = useRef(false);
+  const comboRef = useRef(null);
+
+  useEffect(() => {
+    window.RC.applyRemote = (d) => { applyingRemote.current = true; setData(normalize(d)); };
+    window.RC.getData = () => dataRef.current;
+    window.RC.setAuth = ({ editable, uid, ownerConfigured }) => { setCanEdit(!!editable); setUid(uid || null); setOwnerConfigured(ownerConfigured !== false); };
+    window.RC.setStatus = (s) => setStatus(s || '');
+    if (window.RC.onReady) window.RC.onReady();
+  }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+    if (applyingRemote.current) { applyingRemote.current = false; return; }
+    if (canEdit && window.RC.pushChange) window.RC.pushChange(data);
+  }, [data]);
+
+  useEffect(() => {
+    const onDoc = (e) => { if (comboRef.current && !comboRef.current.contains(e.target)) setComboOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, []);
+
+  useEffect(() => { const id = setInterval(() => setTick((t) => t + 1), 60000); return () => clearInterval(id); }, []);
+
+  // Hintergrund-Scrollen sperren, solange ein Pop-up offen ist
+  useEffect(() => {
+    if (detail || shareOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [detail, shareOpen]);
+
+  const resetForm = () => { setForm(emptyForm); setEditingName(null); setShowForm(false); };
+  const submitForm = () => {
+    const name = form.name.trim();
+    if (!name) return;
+    const hcp = form.hcp === '' ? null : parseFloat(form.hcp);
+    const newPlayer = { name, hcp: isNaN(hcp) ? null : hcp, available: form.available };
+    if (editingName) setData({ ...data, roster: data.roster.map((p) => (p.name === editingName ? newPlayer : p)) });
+    else { if (data.roster.find((p) => p.name === name)) return; setData({ ...data, roster: [...data.roster, newPlayer] }); }
+    resetForm();
+  };
+  const startEdit = (player) => {
+    setForm({ name: player.name, hcp: player.hcp ?? '', available: player.available || { day1: true, day2: true, day3: true } });
+    setEditingName(player.name); setShowForm(true); setShowManage(true); setDetail(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const removePlayer = (name) => setData({ ...data, roster: data.roster.filter((p) => p.name !== name) });
+  const toggleAvailability = (day) => setForm({ ...form, available: { ...form.available, [day]: !form.available[day] } });
+
+  const updatePair = (day, pairIdx, side, slotIdx, value) => {
+    const newPairs = [...data[day].pairs];
+    const sideArr = [...newPairs[pairIdx][side]];
+    sideArr[slotIdx] = value;
+    newPairs[pairIdx] = { ...newPairs[pairIdx], [side]: sideArr };
+    setData({ ...data, [day]: { ...data[day], pairs: newPairs } });
+  };
+  const updatePairTime = (day, pairIdx, value) => {
+    const newPairs = [...data[day].pairs];
+    newPairs[pairIdx] = { ...newPairs[pairIdx], time: value };
+    setData({ ...data, [day]: { ...data[day], pairs: newPairs } });
+  };
+  const addPair = (day) => setData({ ...data, [day]: { ...data[day], pairs: [...data[day].pairs, { own: ['', ''], opp: ['', ''], time: '' }] } });
+  const removePair = (day, idx) => setData({ ...data, [day]: { ...data[day], pairs: data[day].pairs.filter((_, i) => i !== idx) } });
+
+  const updateMatch = (idx, side, value) => { const arr = [...data.day3.matches]; arr[idx] = { ...arr[idx], [side]: value }; setData({ ...data, day3: { matches: arr } }); };
+  const updateMatchTime = (idx, value) => { const arr = [...data.day3.matches]; arr[idx] = { ...arr[idx], time: value }; setData({ ...data, day3: { matches: arr } }); };
+  const addMatch = () => setData({ ...data, day3: { matches: [...data.day3.matches, { own: '', opp: '', time: '' }] } });
+  const removeMatch = (idx) => setData({ ...data, day3: { matches: data.day3.matches.filter((_, i) => i !== idx) } });
+
+  const autofillTimes = () => {
+    if (!window.confirm('Allen Paarungen und Matches automatische Startzeiten zuweisen?\nBestehende Zeiten werden überschrieben.')) return;
+    const a1 = timeSeq('14:30', 10, data.day1.pairs.length);
+    const a2 = timeSeq('11:00', 10, data.day2.pairs.length);
+    const a3 = timeSeq('12:00', 10, data.day3.matches.length);
+    setData({ ...data,
+      day1: { pairs: data.day1.pairs.map((p, i) => ({ ...p, time: a1[i] })) },
+      day2: { pairs: data.day2.pairs.map((p, i) => ({ ...p, time: a2[i] })) },
+      day3: { matches: data.day3.matches.map((m, i) => ({ ...m, time: a3[i] })) },
+    });
+  };
+
+  const updatePairResult = (day, idx, value) => {
+    const newPairs = [...data[day].pairs];
+    newPairs[idx] = { ...newPairs[idx], result: value };
+    setData({ ...data, [day]: { ...data[day], pairs: newPairs } });
+  };
+  const updateMatchResult = (idx, value) => { const arr = [...data.day3.matches]; arr[idx] = { ...arr[idx], result: value }; setData({ ...data, day3: { matches: arr } }); };
+  const updateInfo = (field, value) => setData({ ...data, info: { ...data.info, [field]: value } });
+
+  const importRoster = () => {
+    if (!window.confirm('25 Spieler + Wunsch-Paarungen (Fr/Sa) + Sonntag-Einzel importieren?\n\nACHTUNG: Die aktuelle Aufstellung wird komplett ersetzt.')) return;
+    setData(normalize(IMPORT_DATA));
+  };
+  const applyStrategy = (key) => {
+    if (!window.confirm('Sonntag-Einzel nach dieser Strategie neu sortieren?\nGegner-Eintragungen und Ergebnisse bleiben pro Spieler erhalten.')) return;
+    setData(applySundayStrategy(data, key));
+  };
+
+  const setPairHole = (day, idx, hole, val) => {
+    const pairs = [...data[day].pairs];
+    const hr = [...(pairs[idx].holeResults || [])];
+    while (hr.length <= hole) hr.push('');
+    hr[hole] = val;
+    pairs[idx] = { ...pairs[idx], holeResults: hr };
+    setData({ ...data, [day]: { ...data[day], pairs } });
+  };
+  const setMatchHole = (idx, hole, val) => {
+    const arr = [...data.day3.matches];
+    const hr = [...(arr[idx].holeResults || [])];
+    while (hr.length <= hole) hr.push('');
+    hr[hole] = val;
+    arr[idx] = { ...arr[idx], holeResults: hr };
+    setData({ ...data, day3: { matches: arr } });
+  };
+
+  const availableFor = (day) => data.roster.filter((p) => p.available?.[day]);
+  const playerByName = (name) => data.roster.find((p) => p.name === name);
+  const fmtName = (name) => { const p = playerByName(name); return p && p.hcp != null ? `${name} · HCP ${p.hcp}` : name; };
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = [...data.roster].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+    return q ? list.filter((p) => p.name.toLowerCase().includes(q)) : list;
+  }, [query, data.roster]);
+
+  const _cdDiff = EVENT_START.getTime() - Date.now();
+  const cdText = _cdDiff <= 0 ? 'läuft' : `noch ${Math.floor(_cdDiff / 86400000)} Tage`;
+
+  const exportPlan = (focus) => {
+    const html = generatePlanHTML(data, focus || null);
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const newWin = window.open(url, '_blank');
+    if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+      const a = document.createElement('a');
+      a.href = url; a.download = focus ? `reider-cup-2026-${focus}.html` : 'reider-cup-2026-gesamtplan.html';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  };
+
+  const PlayerSelect = ({ value, onChange, placeholder, day }) => {
+    if (!canEdit) {
+      const label = !value ? '—' : fmtName(value);
+      return <button onClick={() => value && setDetail(value)} className={`w-full text-left px-3 py-2.5 rounded-lg border border-red-200 text-sm font-semibold ${value ? 'bg-red-50/60 text-red-900 hover:bg-red-100/70 transition' : 'bg-stone-50 text-stone-400'}`}>{label}</button>;
+    }
+    const available = availableFor(day);
+    return (
+      <select value={value} onChange={(e) => onChange(e.target.value)}
+        className="w-full px-3 py-2.5 rounded-lg border border-red-200 bg-white text-sm font-medium text-red-900 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
+        <option value="">{placeholder}</option>
+        {available.map((p) => <option key={p.name} value={p.name}>{p.hcp != null ? `${p.name} · HCP ${p.hcp}` : p.name}</option>)}
+      </select>
+    );
+  };
+  const OppInput = ({ value, onChange, placeholder }) => {
+    if (!canEdit) return <div className="w-full px-3 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700">{value || '—'}</div>;
+    return <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+      className="w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white text-sm font-medium text-stone-700 focus:outline-none focus:border-slate-600 focus:ring-2 focus:ring-slate-200 placeholder:text-stone-400" />;
+  };
+  const DayBadge = ({ active, label }) => (
+    <span className={`inline-flex items-center justify-center text-[10px] font-bold rounded px-1.5 py-0.5 ${active ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-400 line-through'}`}>{label}</span>
+  );
+
+  return (
+    <>
+      <div className="print:hidden min-h-screen" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+        <div className="max-w-3xl mx-auto">
+
+          {/* ===== Header ===== */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-red-800 via-red-900 to-[#5c1212] text-white">
+            <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 60%, white 1px, transparent 1px)', backgroundSize: '38px 38px, 58px 58px' }} />
+            <div className="h-1 gold-rule" />
+            <div className="relative px-5 pt-7 pb-10">
+              <div className="flex items-center gap-4">
+                <div className="shrink-0 w-16 h-16 rounded-2xl bg-white/95 ring-2 ring-[#c8a44d] shadow-lg flex items-center justify-center overflow-hidden">
+                  <img src="data:image/webp;base64,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" alt="(R)Eider-Cup" className="w-full h-full object-contain p-0.5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-[0.32em] text-[#e9cf8f] font-bold">Nordsee-Golfclub · St. Peter-Ording</div>
+                  <h1 className="display text-4xl leading-none mt-1" style={{ fontWeight: 700, letterSpacing: '-0.02em' }}>(R)Eider <span className="italic font-medium">Cup</span> <span className="not-italic text-[#e9cf8f]">2026</span></h1>
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 text-red-100 flex-wrap">
+                  <Flag className="w-4 h-4 text-[#e9cf8f]" />
+                  <span className="text-sm tracking-wide font-medium">12.–14. Juni 2026</span>
+                  <span className="text-red-400">·</span>
+                  <span className="text-sm text-red-200">Rotes Team</span>
+                  <span className="inline-flex items-center gap-1 text-[11px] bg-[#c8a44d] text-[#3a2a08] font-bold px-2 py-0.5 rounded-full"><Calendar className="w-3 h-3" />{cdText}</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                  {(adminEntry || canEdit) && (canEdit
+                    ? <button onClick={() => window.RCAUTH && window.RCAUTH.logout()} className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-xs font-semibold transition">Abmelden</button>
+                    : <button onClick={() => window.RCAUTH && window.RCAUTH.login()} className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg text-xs font-semibold transition"><Lock className="w-3.5 h-3.5" /> Verwalten</button>)}
+                  <button onClick={() => setShareOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg text-xs font-semibold transition"><Share2 className="w-3.5 h-3.5" /> Teilen</button>
+                  <button onClick={() => exportPlan(null)} className="inline-flex items-center gap-2 px-3 py-2 bg-[#c8a44d] hover:bg-[#b8923c] text-[#3a2a08] rounded-lg text-xs font-bold shadow transition">
+                    <Printer className="w-3.5 h-3.5" /> Gesamtplan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Einrichtungs-Hinweis */}
+          {canEdit && uid && !ownerConfigured && (
+            <div className="px-5 mt-4">
+              <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
+                <b>Einrichtung:</b> Deine UID: <code className="px-1 py-0.5 bg-amber-100 rounded select-all">{uid}</code> — als <code>OWNER_UID</code> in Datei + Firestore-Regeln eintragen.
+              </div>
+            </div>
+          )}
+
+          {/* ===== Punktestand ===== */}
+          <ScoreBoard data={data} />
+
+          {/* ===== Spieler-Finder ===== */}
+          <div className="px-5 mb-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-red-700" />
+                  <h2 className="display text-xl font-semibold text-slate-900">Spieler</h2>
+                  <span className="text-xs text-stone-400 font-medium">· {data.roster.length}</span>
+                </div>
+                {canEdit && (
+                  <button onClick={() => { setShowManage((v) => !v); setShowForm(false); }} className="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-slate-600 hover:bg-stone-50 transition font-semibold">
+                    {showManage ? 'Verwaltung schließen' : 'Verwalten'}
+                  </button>
+                )}
+              </div>
+
+              {/* Suchbares Dropdown */}
+              <div ref={comboRef} className="relative">
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-stone-300 bg-white focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-100 transition">
+                  <Search className="w-4 h-4 text-stone-400 shrink-0" />
+                  <input
+                    value={query}
+                    onChange={(e) => { setQuery(e.target.value); setComboOpen(true); }}
+                    onFocus={() => setComboOpen(true)}
+                    placeholder="Spieler suchen & antippen für Spielplan …"
+                    className="w-full text-sm outline-none bg-transparent text-slate-800 placeholder:text-stone-400" />
+                  <ChevDown className={`w-4 h-4 text-stone-400 shrink-0 transition ${comboOpen ? 'rotate-180' : ''}`} />
+                </div>
+                {comboOpen && (
+                  <div className="absolute z-30 left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-xl max-h-72 overflow-y-auto">
+                    {filtered.length === 0 ? (
+                      <div className="px-4 py-3 text-sm text-stone-400 italic">Keine Treffer</div>
+                    ) : filtered.map((p) => (
+                      <button key={p.name} onClick={() => { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); setDetail(p.name); setComboOpen(false); setQuery(''); }}
+                        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-red-50 transition border-b border-stone-100 last:border-0">
+                        <span className="font-semibold text-slate-800 text-sm">{p.name}</span>
+                        <span className="flex items-center gap-1.5">
+                          {p.hcp != null && <span className="text-[11px] text-stone-500">HCP {p.hcp}</span>}
+                          <span className="flex gap-0.5">
+                            {['day1','day2','day3'].map((d) => <DayBadge key={d} active={p.available?.[d]} label={DAY_META[d].short} />)}
+                          </span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Verfügbarkeits-Zähler */}
+              <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-around text-xs">
+                {['day1','day2','day3'].map((d) => (
+                  <div key={d} className="text-center">
+                    <div className="text-stone-400 uppercase tracking-wider text-[10px]">{DAY_META[d].short}</div>
+                    <div className="font-bold text-slate-900">{availableFor(d).length}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Verwaltung (nur Owner) */}
+              {canEdit && showManage && (
+                <div className="mt-4 pt-4 border-t border-stone-100">
+                  {!showForm && (<>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <button onClick={() => setShowForm(true)} className="text-xs px-3 py-1.5 bg-red-800 text-white rounded-lg hover:bg-red-900 transition flex items-center gap-1"><Plus className="w-3 h-3" /> Spieler hinzufügen</button>
+                      <button onClick={autofillTimes} className="text-xs px-3 py-1.5 bg-[#0d2240] text-white rounded-lg hover:bg-[#102a4c] transition flex items-center gap-1">⏱ Startzeiten auto-füllen</button>
+                      <button onClick={importRoster} className="text-xs px-3 py-1.5 bg-[#c8a44d] text-[#3a2a08] rounded-lg hover:bg-[#b8923c] transition flex items-center gap-1 font-bold">⬇ Liste importieren (25)</button>
+                    </div>
+                    <div className="mb-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Strategie · Sonntag-Einzel</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {STRATEGIES.map((s) => (
+                          <button key={s.key} onClick={() => applyStrategy(s.key)} className={`text-[11px] px-2.5 py-1.5 rounded-lg border transition ${data.strategy === s.key ? 'bg-red-800 text-white border-red-800' : 'bg-white text-slate-600 border-stone-200 hover:bg-stone-50'}`}>{s.label}</button>
+                        ))}
+                      </div>
+                      {data.strategy && (() => { const s = STRATEGIES.find((x) => x.key === data.strategy); return s ? <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">{s.desc}</p> : null; })()}
+                    </div>
+                  </>)}
+                  {showForm && (
+                    <div className="mb-4 p-4 bg-red-50/50 border border-red-200 rounded-xl">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-red-900">{editingName ? 'Spieler bearbeiten' : 'Neuer Spieler'}</h3>
+                        <button onClick={resetForm} className="text-stone-400 hover:text-stone-700"><X className="w-4 h-4" /></button>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-[11px] font-semibold text-stone-600 uppercase tracking-wider block mb-1">Name</label>
+                          <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Vorname / Spitzname" className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-200" />
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold text-stone-600 uppercase tracking-wider block mb-1">HCPI</label>
+                          <input type="number" step="0.1" value={form.hcp} onChange={(e) => setForm({ ...form, hcp: e.target.value })} placeholder="18.1" className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-200" />
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold text-stone-600 uppercase tracking-wider block mb-2">Verfügbarkeit</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {['day1','day2','day3'].map((d) => (
+                              <button key={d} type="button" onClick={() => toggleAvailability(d)} className={`px-2 py-2 rounded-lg border text-xs font-medium transition ${form.available[d] ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-stone-50 border-stone-200 text-stone-400'}`}>
+                                <div className="font-bold">{DAY_META[d].date}</div>
+                                <div className="text-[10px] mt-0.5 opacity-70">{DAY_META[d].format}</div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <button onClick={submitForm} disabled={!form.name.trim()} className="w-full mt-1 px-4 py-2.5 bg-red-800 text-white rounded-lg font-medium text-sm hover:bg-red-900 transition disabled:bg-stone-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"><Check className="w-4 h-4" />{editingName ? 'Übernehmen' : 'Hinzufügen'}</button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                    {[...data.roster].sort((a, b) => a.name.localeCompare(b.name, 'de')).map((p) => (
+                      <div key={p.name} className="flex items-center gap-2 p-2.5 bg-white border border-stone-200 rounded-lg">
+                        <button onClick={() => setDetail(p.name)} className="flex-1 min-w-0 text-left">
+                          <span className="font-semibold text-slate-900 text-sm">{p.name}</span>
+                          {p.hcp != null && <span className="text-xs font-medium text-stone-500 ml-2">HCP {p.hcp}</span>}
+                        </button>
+                        <button onClick={() => startEdit(p)} className="p-1.5 text-stone-400 hover:text-red-700 transition"><Edit2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => removePlayer(p.name)} className="p-1.5 text-stone-400 hover:text-red-700 transition"><X className="w-4 h-4" /></button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ===== Konflikt-Warnungen ===== */}
+          <ConflictsCard data={data} />
+
+          {/* ===== Tage ===== */}
+          <DayCard dayKey="day1" icon={<Flag className="w-5 h-5" />} availableCount={availableFor('day1').length}>
+            <FormatExplanation rule="Beide Spieler spielen ihren eigenen Ball. Auf jedem Loch zählt das bessere Nettoergebnis des Teams (Schläge minus Vorgabe) – gespielt mit ¾ der Spielvorgabe." />
+            <BestballSVG />
+            <PairList day="day1" pairs={data.day1.pairs} canEdit={canEdit} addPair={addPair} removePair={removePair} updatePair={updatePair} updatePairTime={updatePairTime} setPairHole={setPairHole} PlayerSelect={PlayerSelect} OppInput={OppInput} />
+          </DayCard>
+
+          <DayCard dayKey="day2" icon={<Target className="w-5 h-5" />} availableCount={availableFor('day2').length}>
+            <FormatExplanation rule="Zwei Spieler teilen sich EINEN Ball. Sie schlagen abwechselnd, bis der Ball eingelocht ist. Abschläge wechseln (gerade/ungerade Löcher)." />
+            <FoursomesSVG />
+            <FormatExplanation rule="Wertung: Nettoergebnis mit ¾ der Spielvorgabe. Bei Aufgabe eines Lochs erhält automatisch das andere Team den Punkt für dieses Loch." note />
+            <PairList day="day2" pairs={data.day2.pairs} canEdit={canEdit} addPair={addPair} removePair={removePair} updatePair={updatePair} updatePairTime={updatePairTime} setPairHole={setPairHole} PlayerSelect={PlayerSelect} OppInput={OppInput} />
+          </DayCard>
+
+          <DayCard dayKey="day3" icon={<Swords className="w-5 h-5" />} availableCount={availableFor('day3').length}>
+            <FormatExplanation rule="Jeder Spieler tritt im Einzel (2er-Flight) gegen einen Gegner an. Gewertet wird das Nettoergebnis mit ¾ Vorgabe: Wer das Loch netto besser spielt, gewinnt es." />
+            <MatchPlaySVG />
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs uppercase tracking-wider font-bold text-slate-700">Einzelmatches</h3>
+              {canEdit && <button onClick={addMatch} className="text-xs px-2 py-1 bg-red-800 text-white rounded-lg hover:bg-red-900 transition flex items-center gap-1"><Plus className="w-3 h-3" /> Match</button>}
+            </div>
+            <div className="space-y-3">
+              {data.day3.matches.map((m, idx) => (
+                <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                  <div className="flex items-center justify-between mb-2 gap-2">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Match {idx + 1}</span>
+                    <div className="flex items-center gap-2">
+                      <TimeField value={m.time} canEdit={canEdit} onChange={(v) => updateMatchTime(idx, v)} />
+                      {canEdit && data.day3.matches.length > 1 && <button onClick={() => removeMatch(idx)} className="text-stone-400 hover:text-red-700"><X className="w-4 h-4" /></button>}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <PlayerSelect value={m.own} onChange={(v) => updateMatch(idx, 'own', v)} placeholder="Rotes Team · Spieler" day="day3" />
+                    <div className="text-center text-xs text-slate-400 italic">vs.</div>
+                    <OppInput value={m.opp} onChange={(v) => updateMatch(idx, 'opp', v)} placeholder="Gegner · Name" />
+                  </div>
+                  <HoleTracker holeResults={m.holeResults} holesN={9} canEdit={canEdit} onSet={(hole, val) => setMatchHole(idx, hole, val)} />
+                </div>
+              ))}
+            </div>
+          </DayCard>
+
+          <div className="px-5 pb-10 pt-2">
+            <p className="text-xs text-center text-stone-400 italic">
+              {canEdit ? 'Verwalten-Modus · Änderungen werden live an alle geteilt' : 'Live-Aufstellung · aktualisiert sich automatisch'}
+              {status && <span className="ml-2 not-italic text-stone-500">· {status}</span>}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== Steckbrief-Modal ===== */}
+      {detail && (
+        <PlayerDetail
+          name={detail} data={data} playerByName={playerByName} fmtName={fmtName}
+          canEdit={canEdit} onClose={() => setDetail(null)} onEdit={startEdit} onExport={() => exportPlan(detail)} />
+      )}
+
+      {/* ===== Teilen-Modal ===== */}
+      {shareOpen && <ShareSheet onClose={() => setShareOpen(false)} />}
+    </>
+  );
+}
+
+/* ---------- Unterkomponenten ---------- */
+function TimeField({ value, canEdit, onChange }) {
+  if (canEdit) return <input type="time" value={value || ''} onChange={(e) => onChange(e.target.value)} className="px-2 py-1 rounded-md border border-[#c8a44d]/50 bg-[#fbf6e9] text-xs font-bold text-[#7a5c12] focus:outline-none focus:ring-2 focus:ring-[#c8a44d]/30" />;
+  if (!value) return null;
+  return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[#fbf6e9] border border-[#c8a44d]/40 text-[#7a5c12] text-xs font-bold"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{value}</span>;
+}
+
+function HoleTracker({ holeResults, holesN, canEdit, onSet }) {
+  const hr = holeResults || [];
+  const o = matchOutcome(hr, holesN);
+  const cycle = { '': 'red', red: 'half', half: 'opp', opp: '' };
+  const color = (s) => s === 'red' ? 'bg-red-700 text-white border-red-700' : s === 'opp' ? 'bg-slate-600 text-white border-slate-600' : s === 'half' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-stone-400 border-stone-300';
+  if (!canEdit && o.played === 0) return null;
+  return (
+    <div className="mt-2 pt-2 border-t border-slate-200/70">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Loch für Loch</span>
+        {o.label && <span className={`text-[11px] font-bold ${o.decided ? (o.point === 'red' ? 'text-red-700' : o.point === 'opp' ? 'text-slate-600' : 'text-amber-600') : 'text-slate-600'}`}>{o.label}</span>}
+      </div>
+      <div className="grid grid-cols-9 gap-1">
+        {Array.from({ length: holesN }).map((_, i) => {
+          const s = hr[i] || '';
+          return canEdit
+            ? <button key={i} onClick={() => onSet(i, cycle[s])} className={`aspect-square rounded text-[10px] font-bold border leading-none transition ${color(s)}`} title={`Loch ${i + 1}`}>{i + 1}</button>
+            : <div key={i} className={`aspect-square rounded text-[10px] font-bold border flex items-center justify-center ${color(s)}`}>{i + 1}</div>;
+        })}
+      </div>
+      {canEdit && <p className="text-[10px] text-stone-400 mt-1.5">Tippen: leer → <span className="text-red-700 font-bold">Rot</span> → <span className="text-amber-600 font-bold">½</span> → <span className="text-slate-600 font-bold">Gegner</span></p>}
+    </div>
+  );
+}
+
+function ResultControl({ value, canEdit, onChange }) {
+  if (canEdit) {
+    const opts = [['red', 'Rot', 'bg-red-700 text-white'], ['half', '½', 'bg-amber-500 text-white'], ['opp', 'Gegner', 'bg-slate-600 text-white']];
+    return (
+      <div className="inline-flex rounded-md overflow-hidden border border-stone-300">
+        {opts.map(([v, label, act]) => (
+          <button key={v} onClick={() => onChange(value === v ? '' : v)} className={`px-2.5 py-1 text-[11px] font-bold transition ${value === v ? act : 'bg-white text-stone-500 hover:bg-stone-50'}`}>{label}</button>
+        ))}
+      </div>
+    );
+  }
+  if (!value) return null;
+  const map = { red: ['Rot gewonnen', 'bg-red-100 text-red-800'], half: ['Geteilt', 'bg-amber-100 text-amber-800'], opp: ['Gegner', 'bg-slate-200 text-slate-700'] };
+  const [t, c] = map[value] || ['', ''];
+  return <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${c}`}>{t}</span>;
+}
+
+function PairList({ day, pairs, canEdit, addPair, removePair, updatePair, updatePairTime, setPairHole, PlayerSelect, OppInput }) {
+  return (
+    <>
+      <div className="flex items-center justify-between mt-2 mb-2">
+        <h3 className="text-xs uppercase tracking-wider font-bold text-slate-700">Paarungen</h3>
+        {canEdit && <button onClick={() => addPair(day)} className="text-xs px-2 py-1 bg-red-800 text-white rounded-lg hover:bg-red-900 transition flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Paarung</button>}
+      </div>
+      <div className="space-y-3">
+        {pairs.map((p, idx) => (
+          <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+            <div className="flex items-center justify-between mb-2 gap-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Paarung {idx + 1}</span>
+              <div className="flex items-center gap-2">
+                <TimeField value={p.time} canEdit={canEdit} onChange={(v) => updatePairTime(day, idx, v)} />
+                {canEdit && pairs.length > 1 && <button onClick={() => removePair(day, idx)} className="text-stone-400 hover:text-red-700"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="space-y-1.5">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-red-800">Rotes Team</div>
+                <PlayerSelect value={p.own[0]} onChange={(v) => updatePair(day, idx, 'own', 0, v)} placeholder="Spieler A" day={day} />
+                <PlayerSelect value={p.own[1]} onChange={(v) => updatePair(day, idx, 'own', 1, v)} placeholder="Spieler B" day={day} />
+              </div>
+              <div className="space-y-1.5 pt-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Gegner</div>
+                <OppInput value={p.opp[0]} onChange={(v) => updatePair(day, idx, 'opp', 0, v)} placeholder="Gegner A" />
+                <OppInput value={p.opp[1]} onChange={(v) => updatePair(day, idx, 'opp', 1, v)} placeholder="Gegner B" />
+              </div>
+            </div>
+            <HoleTracker holeResults={p.holeResults} holesN={DAY_META[day].holesN} canEdit={canEdit} onSet={(hole, val) => setPairHole(day, idx, hole, val)} />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function DayCard({ dayKey, icon, availableCount, children }) {
+  const m = DAY_META[dayKey];
+  return (
+    <div className="px-5 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-[#0d2240] via-[#102a4c] to-[#0a1a31] text-white px-5 py-4">
+          <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs uppercase tracking-[0.25em] text-[#c8a44d] font-bold">{m.label}</span>
+            <div className="flex items-center gap-2">
+              {availableCount !== undefined && <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-emerald-900/40 px-2 py-0.5 rounded">{availableCount} verf.</span>}
+              <div className="text-[#c8a44d]">{icon}</div>
+            </div>
+          </div>
+          <h3 className="display text-2xl font-semibold leading-tight">{m.format}</h3>
+          <div className="flex items-center gap-2 text-slate-300 text-sm mt-1 flex-wrap"><span>{m.long}</span><span className="text-slate-500">·</span><span>{m.holes}</span><span className="text-slate-500">·</span><span className="text-[#e9cf8f] font-semibold">Start {m.start}</span></div>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function FormatExplanation({ rule, note }) {
+  return <div className={`border-l-2 pl-3 py-1 text-sm leading-relaxed mb-1 ${note ? 'border-[#c8a44d] text-slate-600 italic' : 'border-red-700 text-slate-700'}`}>{rule}</div>;
+}
+
+function PlayerDetail({ name, data, playerByName, fmtName, canEdit, onClose, onEdit, onExport }) {
+  const p = playerByName(name);
+  const sched = computeSchedule(data, name);
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 z-10 relative bg-gradient-to-br from-red-800 to-red-950 text-white px-6 pt-6 pb-7">
+          <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
+          <button onClick={onClose} aria-label="Schließen" className="absolute top-3 right-3 p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 active:bg-white/20 transition"><X className="w-5 h-5" /></button>
+          <div className="text-[10px] uppercase tracking-[0.28em] text-[#e9cf8f] font-bold mb-1">Spielplan</div>
+          <h2 className="display text-3xl font-bold leading-none">{name}</h2>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            {p && p.hcp != null && <span className="text-xs bg-white/15 px-2 py-0.5 rounded font-semibold">HCP {p.hcp}</span>}
+            {['day1','day2','day3'].map((d) => (
+              <span key={d} className={`text-[10px] font-bold rounded px-1.5 py-0.5 ${p?.available?.[d] ? 'bg-emerald-400/25 text-emerald-100' : 'bg-white/10 text-white/40 line-through'}`}>{DAY_META[d].short}</span>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-5 space-y-3">
+          {sched.length === 0 ? (
+            <p className="text-sm text-stone-500 italic text-center py-4">Noch keiner Paarung / keinem Match zugeordnet.</p>
+          ) : sched.map((e, i) => {
+            const m = DAY_META[e.key];
+            return (
+              <div key={i} className="rounded-xl border border-stone-200 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 bg-[#0d2240] text-white">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-wider text-[#c8a44d] font-bold">{m.label}</span>
+                    <span className="text-sm font-semibold">{m.format}</span>
+                  </div>
+                  {e.time
+                    ? <span className="inline-flex items-center gap-1 text-xs font-bold text-[#0d2240] bg-[#c8a44d] px-2 py-0.5 rounded">{e.time}</span>
+                    : <span className="text-[11px] text-slate-400">{m.date}</span>}
+                </div>
+                <div className="px-4 py-3 text-sm bg-white">
+                  <div className="text-[11px] text-stone-400">{m.date} · {m.holes}</div>
+                  {e.key !== 'day3' && (
+                    <div className="mt-1.5"><span className="text-stone-400 text-xs uppercase tracking-wide mr-2">Partner</span><span className="font-semibold text-red-900">{e.partner ? fmtName(e.partner) : '—'}</span></div>
+                  )}
+                  <div className="mt-1.5"><span className="text-stone-400 text-xs uppercase tracking-wide mr-2">Gegen</span><span className="font-semibold text-slate-700">{e.opp.length ? e.opp.join(' & ') : '—'}</span></div>
+                  {e.result && <div className="mt-1.5"><span className="text-stone-400 text-xs uppercase tracking-wide mr-2">Ergebnis</span><span className={`font-bold ${e.result === 'red' ? 'text-red-700' : e.result === 'opp' ? 'text-slate-600' : 'text-amber-600'}`}>{e.result === 'red' ? 'Rot gewonnen' : e.result === 'opp' ? 'Gegner gewonnen' : 'Geteilt'}</span></div>}
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="flex gap-2 pt-1">
+            <button onClick={onExport} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#c8a44d] hover:bg-[#b8923c] text-[#3a2a08] rounded-xl text-sm font-bold transition">
+              <Printer className="w-4 h-4" /> Einzelplan
+            </button>
+            {canEdit && <button onClick={() => onEdit(p)} className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition inline-flex items-center gap-2"><Edit2 className="w-4 h-4" /> Bearbeiten</button>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScoreBoard({ data }) {
+  const s = computeScore(data);
+  const redPct = s.total ? (s.red / s.total) * 100 : 50;
+  const oppPct = s.total ? (s.opp / s.total) * 100 : 50;
+  return (
+    <div className="px-5 -mt-5 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-[#0d2240] to-[#0a1a31] text-white px-5 py-3 flex items-center justify-between">
+          <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
+          <div className="flex items-center gap-2"><Trophy className="w-4 h-4 text-[#c8a44d]" /><span className="text-xs uppercase tracking-[0.2em] font-bold text-[#c8a44d]">Punktestand</span></div>
+          <span className="text-[11px] text-slate-300">{s.decided}/{s.total} entschieden · {fmtPts(s.total / 2)} zum Sieg</span>
+        </div>
+        <div className="p-5">
+          <div className="flex items-end justify-between mb-3">
+            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-red-700 font-bold mb-0.5">Rotes Team</div><div className="display text-5xl font-bold text-red-800 leading-none">{fmtPts(s.red)}</div></div>
+            <div className="text-stone-300 text-2xl font-light px-3 pb-1">:</div>
+            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-slate-600 font-bold mb-0.5">Gegner</div><div className="display text-5xl font-bold text-slate-700 leading-none">{fmtPts(s.opp)}</div></div>
+          </div>
+          <div className="h-2.5 rounded-full overflow-hidden bg-slate-200 flex">
+            <div className="bg-red-700 h-full transition-all duration-500" style={{ width: redPct + '%' }} />
+            <div className="bg-slate-500 h-full transition-all duration-500" style={{ width: oppPct + '%' }} />
+          </div>
+          {s.decided === 0 && <p className="text-[11px] text-center text-stone-400 italic mt-3">Noch keine Ergebnisse eingetragen</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoCard({ info, canEdit, updateInfo }) {
+  const now = Date.now();
+  const diff = EVENT_START.getTime() - now;
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const countdown = diff <= 0 ? 'Das Turnier läuft – viel Erfolg! ⛳' : `Noch ${days} Tage${days < 14 ? ` ${hours} Std.` : ''} bis zum Abschlag`;
+  const mapsUrl = info.maps || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(info.address || 'Nordsee-Golfclub St. Peter-Ording'));
+  return (
+    <div className="px-5 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 overflow-hidden">
+        <div className="relative bg-gradient-to-r from-emerald-800 to-emerald-900 text-white px-5 py-3 flex items-center gap-2">
+          <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
+          <Calendar className="w-4 h-4 text-[#e9cf8f]" />
+          <span className="text-sm font-bold">{countdown}</span>
+        </div>
+        <div className="p-5 space-y-3 text-sm">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">Treffpunkt</div>
+            {canEdit
+              ? <input value={info.meet} onChange={(e) => updateInfo('meet', e.target.value)} placeholder="z. B. Treffen 30 Min vorher am Clubhaus" className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100" />
+              : <p className="text-slate-700">{info.meet || '—'}</p>}
+          </div>
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">Adresse</div>
+            {canEdit
+              ? <input value={info.address} onChange={(e) => updateInfo('address', e.target.value)} className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100" />
+              : <a href={mapsUrl} target="_blank" rel="noopener" className="inline-flex items-start gap-1.5 text-emerald-800 font-semibold hover:underline"><MapPin className="w-4 h-4 mt-0.5 shrink-0" /><span>{info.address || '—'}</span></a>}
+          </div>
+          {(canEdit || info.notes) && (
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">Hinweise</div>
+              {canEdit
+                ? <textarea value={info.notes} onChange={(e) => updateInfo('notes', e.target.value)} rows={2} placeholder="Catering, Dresscode, Carts …" className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100" />
+                : <p className="text-slate-700 whitespace-pre-line">{info.notes}</p>}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConflictsCard({ data }) {
+  const issues = computeConflicts(data);
+  if (issues.length === 0) return null;
+  return (
+    <div className="px-5 mb-6">
+      <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4">
+        <div className="flex items-center gap-2 mb-2"><Alert className="w-4 h-4 text-amber-700" /><h3 className="text-sm font-bold text-amber-900">Hinweise zur Aufstellung ({issues.length})</h3></div>
+        <ul className="space-y-1">
+          {issues.map((t, i) => <li key={i} className="text-xs text-amber-900 flex gap-1.5"><span className="text-amber-500">•</span><span>{t}</span></li>)}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function ShareSheet({ onClose }) {
+  const [copied, setCopied] = useState(false);
+  const qr = makeQR(VIEW_URL);
+  const copy = async () => { try { await navigator.clipboard.writeText(VIEW_URL); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch (e) { window.prompt('Link kopieren:', VIEW_URL); } };
+  const wa = 'https://wa.me/?text=' + encodeURIComponent('(R)Eider Cup 2026 – Aufstellung & Spielpläne: ' + VIEW_URL);
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
+        <div className="relative bg-gradient-to-br from-red-800 to-red-950 text-white px-6 py-5">
+          <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
+          <button onClick={onClose} aria-label="Schließen" className="absolute top-3 right-3 p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 active:bg-white/20 transition"><X className="w-5 h-5" /></button>
+          <div className="text-[10px] uppercase tracking-[0.28em] text-[#e9cf8f] font-bold mb-1">Teilen</div>
+          <h2 className="display text-2xl font-bold leading-none">Aufstellung weitergeben</h2>
+        </div>
+        <div className="p-6 space-y-4">
+          {qr && <div className="flex justify-center"><img src={qr} alt="QR-Code" className="w-44 h-44 rounded-xl border border-stone-200" /></div>}
+          <p className="text-xs text-center text-stone-500">QR-Code scannen oder Link teilen – Spieler sehen die Aufstellung (nur Ansicht).</p>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-stone-100 text-xs text-slate-600 break-all">{VIEW_URL}</div>
+          <div className="flex gap-2">
+            <button onClick={copy} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-bold transition"><Copy className="w-4 h-4" />{copied ? 'Kopiert ✓' : 'Link kopieren'}</button>
+            <a href={wa} target="_blank" rel="noopener" className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition">WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Export ---------- */
+function generatePlanHTML(data, focus) {
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmtPlayer = (name) => { if (!name) return '—'; const p = data.roster.find((x) => x.name === name); if (!p) return esc(name); return p.hcp != null ? `${esc(name)} <span class="meta">(HCP ${p.hcp})</span>` : esc(name); };
+  const today = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
+  const META = { day1: { l: 'Tag 1', f: 'Bestball · 9 Loch', d: 'Freitag, 12. Juni' }, day2: { l: 'Tag 2', f: 'Klassischer Vierer · 18 Loch', d: 'Samstag, 13. Juni' }, day3: { l: 'Tag 3', f: 'Lochspiel · Einzel · 9 Loch', d: 'Sonntag, 14. Juni' } };
+
+  const HEAD = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>(R)Eider Cup 2026${focus ? ' – ' + esc(focus) : ' – Gesamtplan'}</title><style>
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: #1a1a1a; max-width: 720px; margin: 0 auto; padding: 30px 20px 60px; background: #f5f2ea; line-height: 1.5; }
+  .actions { position: sticky; top: 10px; z-index: 10; background: #0d2240; color: white; padding: 12px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .actions p { margin: 0; font-size: 13px; font-family: sans-serif; }
+  .actions button { background: #c8a44d; color: #3a2a08; border: none; padding: 8px 16px; border-radius: 5px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: sans-serif; }
+  h1 { font-size: 30px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+  h1 em { font-weight: 400; }
+  .header { border-bottom: 3px solid #7f1d1d; padding-bottom: 14px; margin-bottom: 22px; }
+  .subtitle { font-size: 10px; text-transform: uppercase; letter-spacing: 0.28em; color: #7f1d1d; font-weight: 700; }
+  .info { font-size: 12px; color: #555; margin-top: 4px; }
+  section { margin-bottom: 24px; page-break-inside: avoid; }
+  .day-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: #0d2240; font-weight: 700; }
+  h2 { font-size: 17px; margin: 2px 0; font-weight: 700; }
+  .day-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; border-left: 3px solid #c8a44d; padding-left: 10px; }
+  .date { font-size: 11px; color: #555; }
+  table { width: 100%; border-collapse: collapse; border-top: 1px solid #ddd; }
+  th { padding: 7px 9px; border-bottom: 2px solid #0d2240; font-size: 10px; text-align: left; text-transform: uppercase; letter-spacing: 0.08em; color: #555; font-weight: 600; }
+  td { padding: 7px 9px; border-bottom: 1px solid #e3ddd2; font-size: 13px; vertical-align: top; }
+  td.num { font-weight: 700; color: #7f1d1d; width: 42px; }
+  td.time { font-weight: 700; color: #7a5c12; white-space: nowrap; width: 58px; }
+  td.vs { text-align: center; font-style: italic; color: #999; width: 28px; }
+  .meta { font-size: 11px; color: #777; font-style: italic; }
+  .course-info { background: #ece7db; border-left: 3px solid #0d2240; padding: 12px 16px; margin-bottom: 22px; font-size: 12px; color: #555; }
+  .course-info strong { color: #1a1a1a; }
+  footer { margin-top: 34px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 10px; color: #888; text-align: center; }
+  @media print { @page { size: A4; margin: 15mm; } body { background: white; padding: 0; max-width: 100%; } .actions { display: none; } }
+</style></head><body>
+<div class="actions"><p>Tipp: Über den Button drucken oder als PDF speichern.</p><button onclick="window.print()">Drucken / Als PDF</button></div>`;
+  const FOOT = `<footer>(R)Eider Cup 2026 · Nordsee-Golfclub St. Peter-Ording · erstellt am ${today}</footer></body></html>`;
+
+  if (focus) {
+    const sched = computeSchedule(data, focus);
+    const p = data.roster.find((x) => x.name === focus);
+    const rows = ['day1','day2','day3'].map((k) => {
+      const e = sched.find((x) => x.key === k);
+      if (!e) return '';
+      return `<tr><td class="num">${META[k].l}</td><td>${META[k].f}</td><td class="time">${esc(e.time) || '—'}</td><td>${k !== 'day3' ? fmtPlayer(e.partner) : '<span class="meta">Einzel</span>'}</td><td>${e.opp.length ? e.opp.map(esc).join(' &amp; ') : '—'}</td></tr>`;
+    }).join('');
+    return HEAD + `<div class="header"><div class="subtitle">Persönlicher Spielplan</div><h1>${esc(focus)}${p && p.hcp != null ? ` <em>· HCP ${p.hcp}</em>` : ''}</h1><div class="info">(R)Eider Cup 2026 · 12.–14. Juni · Rotes Team</div></div>
+<table><thead><tr><th>Tag</th><th>Wettbewerb</th><th>Start</th><th>Partner</th><th>Gegner</th></tr></thead><tbody>${rows || '<tr><td colspan="5"><span class="meta">Noch keiner Begegnung zugeordnet.</span></td></tr>'}</tbody></table>` + FOOT;
+  }
+
+  const dayTable = (k, rows) => `<section><div class="day-head"><div><span class="day-label">${META[k].l}</span><h2>${META[k].f}</h2></div><div class="date">${META[k].d}</div></div>
+<table><thead><tr><th>Start</th><th>${k === 'day3' ? 'Match' : 'Paarung'}</th><th>Rotes Team</th>${k === 'day3' ? '<th></th>' : ''}<th>Gegner</th></tr></thead><tbody>${rows}</tbody></table></section>`;
+
+  const pairRows = (pairs) => pairs.map((p, i) => `<tr><td class="time">${esc(p.time) || '—'}</td><td class="num">${i + 1}</td><td><div>${fmtPlayer(p.own[0])}</div><div>${fmtPlayer(p.own[1])}</div></td><td><div>${esc(p.opp[0]) || '—'}</div><div>${esc(p.opp[1]) || '—'}</div></td></tr>`).join('');
+  const matchRows = data.day3.matches.map((m, i) => `<tr><td class="time">${esc(m.time) || '—'}</td><td class="num">${i + 1}</td><td>${fmtPlayer(m.own)}</td><td class="vs">vs.</td><td>${esc(m.opp) || '—'}</td></tr>`).join('');
+
+  return HEAD + `<div class="header"><div class="subtitle">Nordsee-Golfclub · St. Peter-Ording</div><h1>(R)Eider <em>Cup</em> 2026</h1><div class="info">12.–14. Juni · Gesamtplan · Rotes Team</div></div>
+<div class="course-info"><strong>Spielort:</strong> Nordsee-Golfclub St. Peter-Ording (9-Loch-Links, Par 72 bei 18-Loch-Spiel)<br><strong>Wertung:</strong> Nettoergebnis mit ¾ der Spielvorgabe<br><strong>Par-3-Löcher (18-Loch):</strong> 2 (157m), 9 (138m), 11 (157m), 18 (138m)<br><strong>Schwerste Bahnen:</strong> Loch 6 (HCP 1, 443m Par 5), Loch 8 (HCP 5, 444m Par 5)</div>
+${dayTable('day1', pairRows(data.day1.pairs))}${dayTable('day2', pairRows(data.day2.pairs))}${dayTable('day3', matchRows)}` + FOOT;
+}
+
+/* ---------- Illustrationen ---------- */
+function BestballSVG() {
+  return (
+    <div className="my-4 rounded-xl bg-gradient-to-br from-emerald-50 to-stone-100 border border-stone-200 p-5">
+      <svg viewBox="0 0 320 180" className="w-full h-auto">
+        <defs><linearGradient id="fairway1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#86efac" /><stop offset="100%" stopColor="#4ade80" /></linearGradient></defs>
+        <ellipse cx="160" cy="90" rx="150" ry="70" fill="url(#fairway1)" opacity="0.4" />
+        <line x1="280" y1="40" x2="280" y2="90" stroke="#1f2937" strokeWidth="2" /><path d="M 280 40 L 305 48 L 280 56 Z" fill="#991b1b" /><circle cx="280" cy="90" r="4" fill="#1f2937" />
+        <circle cx="45" cy="55" r="14" fill="#991b1b" /><text x="45" y="60" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">A</text>
+        <circle cx="65" cy="65" r="3" fill="white" stroke="#374151" strokeWidth="1" /><path d="M 65 65 Q 170 30 280 90" stroke="#991b1b" strokeWidth="1.5" fill="none" strokeDasharray="3 3" /><text x="120" y="45" fill="#991b1b" fontSize="10" fontWeight="600">Score: 4</text>
+        <circle cx="45" cy="125" r="14" fill="#991b1b" /><text x="45" y="130" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">B</text>
+        <circle cx="65" cy="120" r="3" fill="white" stroke="#374151" strokeWidth="1" /><path d="M 65 120 Q 170 150 280 90" stroke="#991b1b" strokeWidth="1.5" fill="none" strokeDasharray="3 3" /><text x="120" y="155" fill="#991b1b" fontSize="10" fontWeight="600">Score: 5</text>
+        <rect x="225" y="115" width="80" height="40" rx="6" fill="white" stroke="#991b1b" strokeWidth="1.5" /><text x="265" y="130" textAnchor="middle" fill="#78716c" fontSize="8" fontWeight="600">TEAM-SCORE</text><text x="265" y="148" textAnchor="middle" fill="#991b1b" fontSize="16" fontWeight="700">4</text>
+      </svg>
+      <p className="text-xs text-center text-stone-500 mt-2 italic">Das bessere Ergebnis (Spieler A = 4) zählt</p>
+    </div>
+  );
+}
+function FoursomesSVG() {
+  return (
+    <div className="my-4 rounded-xl bg-gradient-to-br from-emerald-50 to-stone-100 border border-stone-200 p-5">
+      <svg viewBox="0 0 320 180" className="w-full h-auto">
+        <defs><linearGradient id="fairway2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#86efac" /><stop offset="100%" stopColor="#4ade80" /></linearGradient></defs>
+        <ellipse cx="160" cy="90" rx="150" ry="70" fill="url(#fairway2)" opacity="0.4" />
+        <line x1="285" y1="40" x2="285" y2="90" stroke="#1f2937" strokeWidth="2" /><path d="M 285 40 L 310 48 L 285 56 Z" fill="#991b1b" /><circle cx="285" cy="90" r="4" fill="#1f2937" />
+        <circle cx="35" cy="90" r="14" fill="#991b1b" /><text x="35" y="95" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">A</text>
+        <circle cx="55" cy="90" r="3" fill="white" stroke="#374151" strokeWidth="1" /><path d="M 55 90 L 110 75" stroke="#991b1b" strokeWidth="1.5" fill="none" /><text x="80" y="68" fill="#991b1b" fontSize="9" fontWeight="600">1. Schlag</text>
+        <circle cx="120" cy="75" r="11" fill="#7c2d12" /><text x="120" y="79" textAnchor="middle" fill="white" fontSize="9" fontWeight="700">B</text><path d="M 130 75 L 195 92" stroke="#7c2d12" strokeWidth="1.5" fill="none" /><text x="155" y="68" fill="#7c2d12" fontSize="9" fontWeight="600">2. Schlag</text>
+        <circle cx="205" cy="92" r="11" fill="#991b1b" /><text x="205" y="96" textAnchor="middle" fill="white" fontSize="9" fontWeight="700">A</text><path d="M 215 92 L 280 90" stroke="#991b1b" strokeWidth="1.5" fill="none" /><text x="240" y="108" fill="#991b1b" fontSize="9" fontWeight="600">3. Schlag</text>
+        <rect x="30" y="150" width="260" height="22" rx="4" fill="white" stroke="#d6d3d1" strokeWidth="1" /><circle cx="45" cy="161" r="3" fill="white" stroke="#374151" strokeWidth="1" /><text x="55" y="165" fill="#57534e" fontSize="9" fontWeight="500">EIN Ball · abwechselnde Schläge bis ins Loch</text>
+      </svg>
+    </div>
+  );
+}
+function MatchPlaySVG() {
+  return (
+    <div className="my-4 rounded-xl bg-gradient-to-br from-emerald-50 to-stone-100 border border-stone-200 p-5">
+      <svg viewBox="0 0 320 220" className="w-full h-auto">
+        <defs><linearGradient id="fairway3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#86efac" /><stop offset="100%" stopColor="#4ade80" /></linearGradient></defs>
+        <rect x="10" y="20" width="300" height="80" rx="6" fill="url(#fairway3)" opacity="0.3" />
+        <circle cx="35" cy="60" r="14" fill="#991b1b" /><text x="35" y="64" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">R</text>
+        <circle cx="55" cy="60" r="3" fill="white" stroke="#374151" strokeWidth="1" /><path d="M 55 60 L 280 60" stroke="#991b1b" strokeWidth="1.5" fill="none" strokeDasharray="3 3" /><line x1="285" y1="35" x2="285" y2="60" stroke="#1f2937" strokeWidth="2" /><path d="M 285 35 L 305 41 L 285 47 Z" fill="#991b1b" /><text x="160" y="48" textAnchor="middle" fill="#991b1b" fontSize="10" fontWeight="700">4 Schläge</text>
+        <text x="160" y="115" textAnchor="middle" fill="#78716c" fontSize="12" fontWeight="700" fontStyle="italic">vs.</text>
+        <rect x="10" y="125" width="300" height="80" rx="6" fill="url(#fairway3)" opacity="0.3" />
+        <circle cx="35" cy="165" r="14" fill="#1e3a8a" /><text x="35" y="169" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">G</text>
+        <circle cx="55" cy="165" r="3" fill="white" stroke="#374151" strokeWidth="1" /><path d="M 55 165 L 280 165" stroke="#1e3a8a" strokeWidth="1.5" fill="none" strokeDasharray="3 3" /><line x1="285" y1="140" x2="285" y2="165" stroke="#1f2937" strokeWidth="2" /><path d="M 285 140 L 305 146 L 285 152 Z" fill="#1e3a8a" /><text x="160" y="195" textAnchor="middle" fill="#1e3a8a" fontSize="10" fontWeight="700">5 Schläge</text>
+      </svg>
+      <p className="text-xs text-center text-stone-500 mt-2 italic">Rot gewinnt dieses Loch · steht 1 auf</p>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<ReiderCup />);
+</script>
+
+<!-- ====================== CLOUD-SYNC (Firebase) ======================
+     Geteiltes Dokument: tournaments/reider-cup-2026
+     Lesen: alle (kein Login). Schreiben: nur OWNER_UID (Google-Login via #admin). -->
+<script type="module">
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC60B8a1NoJor0d_HQmQF5_Ip6haubhJeA",
+  authDomain: "reider-cup.firebaseapp.com",
+  projectId: "reider-cup",
+  storageBucket: "reider-cup.firebasestorage.app",
+  messagingSenderId: "323893702256",
+  appId: "1:323893702256:web:9703f2b130ebcf718bceb5"
+};
+
+const OWNER_UID = "tGtOcYoCTVPrYjaNy9t2bgCRA9U2";
+const TOURNAMENT_ID = "reider-cup-2026";
+
+function whenReady(cb) {
+  if (window.RC && window.RC.setAuth) cb();
+  else { window.RC = window.RC || {}; window.RC.onReady = cb; setTimeout(() => { if (window.RC.setAuth) cb(); }, 1500); }
+}
+
+(async () => {
+  let mod;
+  try {
+    const v = "https://www.gstatic.com/firebasejs/10.12.5/";
+    const appM  = await import(v + "firebase-app.js");
+    const authM = await import(v + "firebase-auth.js");
+    const fsM   = await import(v + "firebase-firestore.js");
+    mod = { ...appM, ...authM, ...fsM };
+  } catch (e) { whenReady(() => window.RC.setStatus("offline – nur dieses Gerät")); return; }
+
+  const { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+          getRedirectResult, onAuthStateChanged, signOut, getFirestore, doc, getDoc, setDoc, onSnapshot } = mod;
+
+  const app = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+  const ref = doc(db, "tournaments", TOURNAMENT_ID);
+  const ownerConfigured = !!OWNER_UID;
+
+  let editable = false, lastJSON = "", pushTimer = null;
+
+  whenReady(() => {
+    window.RC.pushChange = (data) => {
+      if (!editable) return;
+      window.RC.setStatus("…");
+      if (pushTimer) clearTimeout(pushTimer);
+      pushTimer = setTimeout(() => pushNow(data), 1200);
+    };
+    window.RC.setStatus(navigator.onLine ? "Live-Sync verbunden" : "offline");
+    onSnapshot(ref, (snap) => {
+      if (!snap.exists()) return;
+      const d = snap.data() && snap.data().data;
+      if (!d) return;
+      const json = JSON.stringify(d);
+      if (json === lastJSON) return;
+      lastJSON = json;
+      window.RC.applyRemote(d);
+    }, () => window.RC.setStatus("offline"));
+  });
+
+  async function pushNow(data) {
+    try { const json = JSON.stringify(data); lastJSON = json; await setDoc(ref, { data, updated: Date.now() }); window.RC.setStatus("gespeichert ✓"); }
+    catch (e) { window.RC.setStatus("Speichern fehlgeschlagen"); console.error(e); }
+  }
+
+  try { await getRedirectResult(auth); } catch (e) {}
+
+  onAuthStateChanged(auth, (user) => {
+    const u = user ? user.uid : null;
+    editable = !!user && (!ownerConfigured || u === OWNER_UID);
+    if (window.RC.setAuth) window.RC.setAuth({ editable, uid: u, ownerConfigured });
+    if (user && !editable) window.RC.setStatus("angemeldet (keine Bearbeitungsrechte)");
+  });
+
+  window.RCAUTH = {
+    login: async () => { try { await signInWithRedirect(auth, provider); } catch (e) { try { await signInWithPopup(auth, provider); } catch (_) { alert("Anmeldung nicht möglich: " + (e.message || e)); } } },
+    logout: async () => { try { await signOut(auth); } catch (e) {} }
+  };
+})();
+</script>
+</body>
+</html>
