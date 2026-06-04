@@ -252,6 +252,41 @@ function applySundayStrategy(data, mode) {
   return { ...data, strategy: mode, day3: { matches } };
 }
 
+/* ---------- Paarungs-Strategien Fr/Sa ---------- */
+const PAIR_STRATS = [
+  { key: 'balance', label: 'Ausgewogen', desc: 'Jedes Paar mischt stark + schwach → möglichst viele enge, gewinnbare Matches. Robust im Netto.' },
+  { key: 'stack', label: 'Bündeln', desc: 'Ähnliche Stärken zusammen → ein paar sehr starke Paare + bewusste „Opfer"-Paare. Mehr Varianz/Risiko.' },
+];
+const WISH_PAIRS = {
+  day1: [['Jürgen Speetzen', 'Wolfgang Belz']],
+  day2: [['Thomas Mehret', 'Frauke Mehret'], ['Linus Howe', 'Falk Howe'], ['Emanuel Bertling', 'Eugen Uhlmann']],
+};
+
+function buildDayPairs(roster, day, mode) {
+  const avail = (roster || []).filter((p) => p.available && p.available[day]);
+  const names = new Set(avail.map((p) => p.name));
+  const wish = (WISH_PAIRS[day] || []).filter((w) => w.every((n) => names.has(n)));
+  const wishNames = new Set(wish.flat());
+  const rest = avail.filter((p) => !wishNames.has(p.name)).sort((a, b) => (a.hcp == null ? 99 : a.hcp) - (b.hcp == null ? 99 : b.hcp));
+  const restPairs = [];
+  if (mode === 'stack') {
+    for (let i = 0; i < rest.length; i += 2) restPairs.push([rest[i].name, rest[i + 1] ? rest[i + 1].name : '']);
+  } else {
+    let lo = 0, hi = rest.length - 1;
+    while (lo < hi) { restPairs.push([rest[lo].name, rest[hi].name]); lo++; hi--; }
+    if (lo === hi) restPairs.push([rest[lo].name, '']);
+  }
+  const owns = [...wish.map((w) => [w[0], w[1]]), ...restPairs];
+  const start = day === 'day1' ? 14 * 60 + 30 : 11 * 60;
+  const wishLen = wish.length;
+  return owns.map((own, i) => { const t = start + i * 10; return { own, opp: ['', ''], time: String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'), result: '', holeResults: [], isWish: i < wishLen }; });
+}
+
+function applyDayPairsData(data, day, mode) {
+  const pairs = buildDayPairs(data.roster, day, mode).map(({ isWish, ...p }) => p);
+  return { ...data, [day]: { pairs } };
+}
+
 function timeSeq(start, stepMin, count) {
   const [h, m] = String(start).split(':').map(Number);
   const base = (h || 0) * 60 + (m || 0);
@@ -381,6 +416,12 @@ function ReiderCup() {
   const applyStrategy = (key) => {
     if (!window.confirm('Sonntag-Einzel nach dieser Strategie neu sortieren?\nGegner-Eintragungen und Ergebnisse bleiben pro Spieler erhalten.')) return;
     setData(applySundayStrategy(data, key));
+  };
+  const applyFromCompare = (dayKey, variant) => {
+    const label = dayKey === 'day3' ? 'Sonntag-Reihenfolge' : (dayKey === 'day1' ? 'Freitag-Paarungen' : 'Samstag-Paarungen');
+    if (!window.confirm(`${label} nach dieser Variante übernehmen?\nDie Aufstellung dieses Tages wird neu gesetzt (Zeiten neu, Gegner/Ergebnisse dieses Tages zurückgesetzt).`)) return;
+    setData(dayKey === 'day3' ? applySundayStrategy(data, variant) : applyDayPairsData(data, dayKey, variant));
+    setStratCompare(false);
   };
 
   const setPairHole = (day, idx, hole, val) => {
@@ -698,7 +739,7 @@ function ReiderCup() {
       {shareOpen && <ShareSheet onClose={() => setShareOpen(false)} />}
 
       {/* ===== Strategie-Vergleich-Modal ===== */}
-      {stratCompare && <StrategyCompare data={data} canEdit={canEdit} onApply={(k) => { applyStrategy(k); setStratCompare(false); }} onClose={() => setStratCompare(false)} />}
+      {stratCompare && <StrategyCompare data={data} canEdit={canEdit} onApply={applyFromCompare} onClose={() => setStratCompare(false)} />}
     </>
   );
 }
@@ -992,36 +1033,47 @@ function ShareSheet({ onClose }) {
 }
 
 function StrategyCompare({ data, canEdit, onApply, onClose }) {
-  const [sel, setSel] = useState(data.strategy || 'standard');
-  const order = buildSundayOrder(data.roster, sel);
-  const s = STRATEGIES.find((x) => x.key === sel) || STRATEGIES[0];
+  const [dayTab, setDayTab] = useState('day3');
+  const [sels, setSels] = useState({ day1: 'balance', day2: 'balance', day3: (data.strategy || 'standard') });
+  const sel = sels[dayTab];
+  const setSel = (k) => setSels((s) => ({ ...s, [dayTab]: k }));
+  const isSun = dayTab === 'day3';
+  const variants = isSun ? STRATEGIES : PAIR_STRATS;
+  const s = variants.find((x) => x.key === sel) || variants[0];
+  const m = DAY_META[dayTab];
   const hcpOf = (n) => { const p = data.roster.find((x) => x.name === n); return p && p.hcp != null ? p.hcp : null; };
+  const dayLabels = { day1: 'Freitag', day2: 'Samstag', day3: 'Sonntag' };
+  const order = isSun ? buildSundayOrder(data.roster, sel) : null;
+  const pairs = isSun ? null : buildDayPairs(data.roster, dayTab, sel);
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
-        <div className="sticky top-0 z-10 relative bg-gradient-to-br from-[#0d2240] to-[#0a1a31] text-white px-6 pt-6 pb-5">
+        <div className="sticky top-0 z-10 relative bg-gradient-to-br from-[#0d2240] to-[#0a1a31] text-white px-6 pt-6 pb-4">
           <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
           <button onClick={onClose} aria-label="Schließen" className="absolute top-3 right-3 p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition"><X className="w-5 h-5" /></button>
           <div className="text-[10px] uppercase tracking-[0.28em] text-[#c8a44d] font-bold mb-1">Strategie-Vergleich</div>
-          <h2 className="display text-2xl font-bold leading-none">Sonntag · Einzel</h2>
-          <p className="text-xs text-slate-300 mt-2">Tippe oben eine Variante an, um ihre komplette Aufstellung zu sehen.</p>
+          <h2 className="display text-2xl font-bold leading-none">{dayLabels[dayTab]} · {m.format}</h2>
+          <div className="flex gap-1.5 mt-3">
+            {['day1', 'day2', 'day3'].map((d) => (
+              <button key={d} onClick={() => setDayTab(d)} className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition ${dayTab === d ? 'bg-[#c8a44d] text-[#3a2a08]' : 'bg-white/10 text-white hover:bg-white/20'}`}>{dayLabels[d]}</button>
+            ))}
+          </div>
         </div>
         <div className="p-5">
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {STRATEGIES.map((x) => (
+            {variants.map((x) => (
               <button key={x.key} onClick={() => setSel(x.key)} className={`text-[11px] px-2.5 py-1.5 rounded-lg border transition ${sel === x.key ? 'bg-[#0d2240] text-white border-[#0d2240]' : 'bg-white text-slate-600 border-stone-200 hover:bg-stone-50'}`}>
-                {x.label}{data.strategy === x.key ? ' ✓' : ''}
+                {x.label}{isSun && data.strategy === x.key ? ' ✓' : ''}
               </button>
             ))}
           </div>
           <div className="border-l-2 border-[#c8a44d] pl-3 py-1 text-sm text-slate-600 mb-3">{s.desc}</div>
-          {data.strategy === sel && <div className="text-[11px] font-bold text-emerald-700 mb-2">● Aktuell aktiv</div>}
+          {isSun && data.strategy === sel && <div className="text-[11px] font-bold text-emerald-700 mb-2">● Aktuell aktiv</div>}
+
           <div className="space-y-1">
-            {order.map((n, i) => {
-              const t = 12 * 60 + i * 8;
-              const time = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
-              const h = hcpOf(n);
+            {isSun && order.map((n, i) => {
+              const t = 12 * 60 + i * 8; const time = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); const h = hcpOf(n);
               return (
                 <div key={n} className="flex items-center gap-2 py-1.5 px-2 rounded-lg odd:bg-stone-50 text-sm">
                   <span className="w-5 text-right font-bold text-slate-400 text-xs">{i + 1}</span>
@@ -1031,10 +1083,27 @@ function StrategyCompare({ data, canEdit, onApply, onClose }) {
                 </div>
               );
             })}
+            {!isSun && pairs.map((p, i) => {
+              const h0 = hcpOf(p.own[0]), h1 = hcpOf(p.own[1]);
+              return (
+                <div key={i} className="flex items-center gap-2 py-1.5 px-2 rounded-lg odd:bg-stone-50 text-sm">
+                  <span className="w-5 text-right font-bold text-slate-400 text-xs">{i + 1}</span>
+                  <span className="w-12 text-[11px] font-bold text-[#7a5c12]">{p.time}</span>
+                  <span className="flex-1 text-slate-800 leading-tight">
+                    <span className="font-semibold">{p.own[0] || '—'}</span>{h0 != null && <span className="text-[10px] text-stone-400"> {h0}</span>}
+                    <span className="text-stone-400"> + </span>
+                    <span className="font-semibold">{p.own[1] || '—'}</span>{h1 != null && <span className="text-[10px] text-stone-400"> {h1}</span>}
+                    {p.isWish && <span className="ml-1 text-[10px] text-[#c8a44d] font-bold">★</span>}
+                  </span>
+                </div>
+              );
+            })}
           </div>
+          <p className="text-[10px] text-stone-400 mt-2">{isSun ? 'Reihenfolge = Tee-Zeiten. Gegner stehen erst am Spieltag fest.' : '★ = fixe Wunsch-Paarung. Zahlen = HCP. Gegner-Paare stehen erst am Spieltag fest.'}</p>
+
           {canEdit
-            ? <button onClick={() => onApply(sel)} className="w-full mt-4 px-4 py-2.5 bg-red-800 text-white rounded-xl text-sm font-bold hover:bg-red-900 transition">Diese Strategie übernehmen</button>
-            : <p className="text-xs text-center text-stone-500 mt-4 italic leading-relaxed">Such dir eine Variante aus und gib sie an Jelko durch – er stellt sie dann ein.</p>}
+            ? <button onClick={() => onApply(dayTab, sel)} className="w-full mt-4 px-4 py-2.5 bg-red-800 text-white rounded-xl text-sm font-bold hover:bg-red-900 transition">Für {dayLabels[dayTab]} übernehmen</button>
+            : <p className="text-xs text-center text-stone-500 mt-4 italic leading-relaxed">Vergleiche die Varianten (Freitag / Samstag / Sonntag) und gib deine Wahl an Jelko durch – er stellt sie dann ein.</p>}
         </div>
       </div>
     </div>
