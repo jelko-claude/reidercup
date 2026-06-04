@@ -271,6 +271,7 @@ function ReiderCup() {
   const [comboOpen, setComboOpen] = useState(false);
   const [detail, setDetail] = useState(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [stratCompare, setStratCompare] = useState(false);
   const [, setTick] = useState(0);
 
   const [canEdit, setCanEdit] = useState(false);
@@ -308,12 +309,12 @@ function ReiderCup() {
 
   // Hintergrund-Scrollen sperren, solange ein Pop-up offen ist
   useEffect(() => {
-    if (detail || shareOpen) {
+    if (detail || shareOpen || stratCompare) {
       const prev = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       return () => { document.body.style.overflow = prev; };
     }
-  }, [detail, shareOpen]);
+  }, [detail, shareOpen, stratCompare]);
 
   const resetForm = () => { setForm(emptyForm); setEditingName(null); setShowForm(false); };
   const submitForm = () => {
@@ -500,6 +501,13 @@ function ReiderCup() {
 
           {/* ===== Punktestand ===== */}
           <ScoreBoard data={data} />
+
+          {/* ===== Strategie-Vergleich (für alle, read-only) ===== */}
+          <div className="px-5 -mt-2 mb-6 flex justify-center">
+            <button onClick={() => setStratCompare(true)} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-stone-200 shadow-sm text-sm font-semibold text-slate-700 hover:bg-stone-50 transition">
+              <Trophy className="w-4 h-4 text-[#c8a44d]" /> Strategie-Vergleich (Sonntag)
+            </button>
+          </div>
 
           {/* ===== Spieler-Finder ===== */}
           <div className="px-5 mb-6">
@@ -688,6 +696,9 @@ function ReiderCup() {
 
       {/* ===== Teilen-Modal ===== */}
       {shareOpen && <ShareSheet onClose={() => setShareOpen(false)} />}
+
+      {/* ===== Strategie-Vergleich-Modal ===== */}
+      {stratCompare && <StrategyCompare data={data} canEdit={canEdit} onApply={(k) => { applyStrategy(k); setStratCompare(false); }} onClose={() => setStratCompare(false)} />}
     </>
   );
 }
@@ -974,6 +985,56 @@ function ShareSheet({ onClose }) {
             <button onClick={copy} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-bold transition"><Copy className="w-4 h-4" />{copied ? 'Kopiert ✓' : 'Link kopieren'}</button>
             <a href={wa} target="_blank" rel="noopener" className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition">WhatsApp</a>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StrategyCompare({ data, canEdit, onApply, onClose }) {
+  const [sel, setSel] = useState(data.strategy || 'standard');
+  const order = buildSundayOrder(data.roster, sel);
+  const s = STRATEGIES.find((x) => x.key === sel) || STRATEGIES[0];
+  const hcpOf = (n) => { const p = data.roster.find((x) => x.name === n); return p && p.hcp != null ? p.hcp : null; };
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
+        <div className="sticky top-0 z-10 relative bg-gradient-to-br from-[#0d2240] to-[#0a1a31] text-white px-6 pt-6 pb-5">
+          <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
+          <button onClick={onClose} aria-label="Schließen" className="absolute top-3 right-3 p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition"><X className="w-5 h-5" /></button>
+          <div className="text-[10px] uppercase tracking-[0.28em] text-[#c8a44d] font-bold mb-1">Strategie-Vergleich</div>
+          <h2 className="display text-2xl font-bold leading-none">Sonntag · Einzel</h2>
+          <p className="text-xs text-slate-300 mt-2">Tippe oben eine Variante an, um ihre komplette Aufstellung zu sehen.</p>
+        </div>
+        <div className="p-5">
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {STRATEGIES.map((x) => (
+              <button key={x.key} onClick={() => setSel(x.key)} className={`text-[11px] px-2.5 py-1.5 rounded-lg border transition ${sel === x.key ? 'bg-[#0d2240] text-white border-[#0d2240]' : 'bg-white text-slate-600 border-stone-200 hover:bg-stone-50'}`}>
+                {x.label}{data.strategy === x.key ? ' ✓' : ''}
+              </button>
+            ))}
+          </div>
+          <div className="border-l-2 border-[#c8a44d] pl-3 py-1 text-sm text-slate-600 mb-3">{s.desc}</div>
+          {data.strategy === sel && <div className="text-[11px] font-bold text-emerald-700 mb-2">● Aktuell aktiv</div>}
+          <div className="space-y-1">
+            {order.map((n, i) => {
+              const t = 12 * 60 + i * 8;
+              const time = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+              const h = hcpOf(n);
+              return (
+                <div key={n} className="flex items-center gap-2 py-1.5 px-2 rounded-lg odd:bg-stone-50 text-sm">
+                  <span className="w-5 text-right font-bold text-slate-400 text-xs">{i + 1}</span>
+                  <span className="w-12 text-[11px] font-bold text-[#7a5c12]">{time}</span>
+                  <span className="flex-1 font-semibold text-slate-800 truncate">{n}</span>
+                  {h != null && <span className="text-[11px] text-stone-400 shrink-0">HCP {h}</span>}
+                </div>
+              );
+            })}
+          </div>
+          {canEdit
+            ? <button onClick={() => onApply(sel)} className="w-full mt-4 px-4 py-2.5 bg-red-800 text-white rounded-xl text-sm font-bold hover:bg-red-900 transition">Diese Strategie übernehmen</button>
+            : <p className="text-xs text-center text-stone-500 mt-4 italic leading-relaxed">Such dir eine Variante aus und gib sie an Jelko durch – er stellt sie dann ein.</p>}
         </div>
       </div>
     </div>
