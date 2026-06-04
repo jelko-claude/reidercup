@@ -1110,7 +1110,7 @@ const FIREBASE_CONFIG = {
   appId: "1:323893702256:web:9703f2b130ebcf718bceb5"
 };
 
-const OWNER_UID = "tGtOcYoCTVPrYjaNy9t2bgCRA9U2";
+const OWNER_UID = "MwVBZFBYc9WV6Bocb4ieLW2bWFx2";
 const TOURNAMENT_ID = "reider-cup-2026";
 
 function whenReady(cb) {
@@ -1174,7 +1174,7 @@ function whenReady(cb) {
   });
 
   window.RCAUTH = {
-    login: async () => { try { await signInWithRedirect(auth, provider); } catch (e) { try { await signInWithPopup(auth, provider); } catch (_) { alert("Anmeldung nicht möglich: " + (e.message || e)); } } },
+    login: async () => { try { await signInWithPopup(auth, provider); } catch (e) { try { await signInWithRedirect(auth, provider); } catch (_) { alert("Anmeldung nicht möglich: " + (e.message || e)); } } },
     logout: async () => { try { await signOut(auth); } catch (e) {} }
   };
 })();
