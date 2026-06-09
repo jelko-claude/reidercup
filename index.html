@@ -324,10 +324,13 @@ function ReiderCup() {
   const [, setTick] = useState(0);
 
   const [canEdit, setCanEdit] = useState(false);
+  const [canScore, setCanScore] = useState(false);
   const [uid, setUid] = useState(null);
   const [ownerConfigured, setOwnerConfigured] = useState(true);
   const [status, setStatus] = useState('');
   const [adminEntry] = useState(() => /admin/i.test(window.location.hash));
+  const [scoreEntry] = useState(() => /score/i.test(window.location.hash));
+  const [scoreLoginOpen, setScoreLoginOpen] = useState(() => /score/i.test(window.location.hash));
 
   const dataRef = useRef(data);
   dataRef.current = data;
@@ -337,7 +340,7 @@ function ReiderCup() {
   useEffect(() => {
     window.RC.applyRemote = (d) => { applyingRemote.current = true; setData(normalize(d)); };
     window.RC.getData = () => dataRef.current;
-    window.RC.setAuth = ({ editable, uid, ownerConfigured }) => { setCanEdit(!!editable); setUid(uid || null); setOwnerConfigured(ownerConfigured !== false); };
+    window.RC.setAuth = ({ editable, scorer, uid, ownerConfigured }) => { setCanEdit(!!editable); setCanScore(!!scorer || !!editable); setUid(uid || null); setOwnerConfigured(ownerConfigured !== false); };
     window.RC.setStatus = (s) => setStatus(s || '');
     if (window.RC.onReady) window.RC.onReady();
   }, []);
@@ -345,7 +348,7 @@ function ReiderCup() {
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
     if (applyingRemote.current) { applyingRemote.current = false; return; }
-    if (canEdit && window.RC.pushChange) window.RC.pushChange(data);
+    if (canScore && window.RC.pushChange) window.RC.pushChange(data);
   }, [data]);
 
   useEffect(() => {
@@ -533,9 +536,12 @@ function ReiderCup() {
                   <span className="inline-flex items-center gap-1 text-[11px] bg-[#c8a44d] text-[#3a2a08] font-bold px-2 py-0.5 rounded-full"><Calendar className="w-3 h-3" />{cdText}</span>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap justify-end">
-                  {(adminEntry || canEdit) && (canEdit
-                    ? <button onClick={() => window.RCAUTH && window.RCAUTH.logout()} className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-xs font-semibold transition">Abmelden</button>
-                    : <button onClick={() => window.RCAUTH && window.RCAUTH.login()} className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg text-xs font-semibold transition"><Lock className="w-3.5 h-3.5" /> Verwalten</button>)}
+                  {uid
+                    ? <button onClick={() => window.RCAUTH && window.RCAUTH.logout()} className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-xs font-semibold transition">Abmelden{canScore && !canEdit ? ' (Score)' : ''}</button>
+                    : <>
+                        {adminEntry && <button onClick={() => window.RCAUTH && window.RCAUTH.login()} className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg text-xs font-semibold transition"><Lock className="w-3.5 h-3.5" /> Verwalten</button>}
+                        {scoreEntry && <button onClick={() => setScoreLoginOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg text-xs font-semibold transition"><Lock className="w-3.5 h-3.5" /> Score-Login</button>}
+                      </>}
                   <button onClick={() => setShareOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg text-xs font-semibold transition"><Share2 className="w-3.5 h-3.5" /> Teilen</button>
                   <button onClick={() => exportPlan(null)} className="inline-flex items-center gap-2 px-3 py-2 bg-[#c8a44d] hover:bg-[#b8923c] text-[#3a2a08] rounded-lg text-xs font-bold shadow transition">
                     <Printer className="w-3.5 h-3.5" /> Gesamtplan
@@ -695,14 +701,14 @@ function ReiderCup() {
           <DayCard dayKey="day1" icon={<Flag className="w-5 h-5" />} availableCount={availableFor('day1').length}>
             <FormatExplanation rule="Beide Spieler spielen ihren eigenen Ball. Auf jedem Loch zählt das bessere Nettoergebnis des Teams (Schläge minus Vorgabe) – gespielt mit ¾ der Spielvorgabe." />
             <BestballSVG />
-            <PairList day="day1" pairs={data.day1.pairs} canEdit={canEdit} addPair={addPair} removePair={removePair} updatePair={updatePair} updatePairTime={updatePairTime} setPairHole={setPairHole} PlayerSelect={PlayerSelect} OppInput={OppInput} />
+            <PairList day="day1" pairs={data.day1.pairs} canEdit={canEdit} canScore={canScore} addPair={addPair} removePair={removePair} updatePair={updatePair} updatePairTime={updatePairTime} setPairHole={setPairHole} PlayerSelect={PlayerSelect} OppInput={OppInput} />
           </DayCard>
 
           <DayCard dayKey="day2" icon={<Target className="w-5 h-5" />} availableCount={availableFor('day2').length}>
             <FormatExplanation rule="Zwei Spieler teilen sich EINEN Ball. Sie schlagen abwechselnd, bis der Ball eingelocht ist. Abschläge wechseln (gerade/ungerade Löcher)." />
             <FoursomesSVG />
             <FormatExplanation rule="Wertung: Nettoergebnis mit ¾ der Spielvorgabe. Bei Aufgabe eines Lochs erhält automatisch das andere Team den Punkt für dieses Loch." note />
-            <PairList day="day2" pairs={data.day2.pairs} canEdit={canEdit} addPair={addPair} removePair={removePair} updatePair={updatePair} updatePairTime={updatePairTime} setPairHole={setPairHole} PlayerSelect={PlayerSelect} OppInput={OppInput} />
+            <PairList day="day2" pairs={data.day2.pairs} canEdit={canEdit} canScore={canScore} addPair={addPair} removePair={removePair} updatePair={updatePair} updatePairTime={updatePairTime} setPairHole={setPairHole} PlayerSelect={PlayerSelect} OppInput={OppInput} />
           </DayCard>
 
           <DayCard dayKey="day3" icon={<Swords className="w-5 h-5" />} availableCount={availableFor('day3').length}>
@@ -727,7 +733,7 @@ function ReiderCup() {
                     <div className="text-center text-xs text-slate-400 italic">vs.</div>
                     <OppInput value={m.opp} onChange={(v) => updateMatch(idx, 'opp', v)} placeholder="Gegner · Name" />
                   </div>
-                  <HoleTracker holeResults={m.holeResults} holesN={9} canEdit={canEdit} onSet={(hole, val) => setMatchHole(idx, hole, val)} />
+                  <HoleTracker holeResults={m.holeResults} holesN={9} canEdit={canScore} onSet={(hole, val) => setMatchHole(idx, hole, val)} />
                 </div>
               ))}
             </div>
@@ -754,6 +760,9 @@ function ReiderCup() {
 
       {/* ===== Strategie-Vergleich-Modal ===== */}
       {stratCompare && <StrategyCompare data={data} canEdit={canEdit} onApply={applyFromCompare} onClose={() => setStratCompare(false)} />}
+
+      {/* ===== Score-Login (Sekretariat) ===== */}
+      {scoreLoginOpen && !uid && <ScoreLogin onClose={() => setScoreLoginOpen(false)} />}
     </>
   );
 }
@@ -807,7 +816,7 @@ function ResultControl({ value, canEdit, onChange }) {
   return <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${c}`}>{t}</span>;
 }
 
-function PairList({ day, pairs, canEdit, addPair, removePair, updatePair, updatePairTime, setPairHole, PlayerSelect, OppInput }) {
+function PairList({ day, pairs, canEdit, canScore, addPair, removePair, updatePair, updatePairTime, setPairHole, PlayerSelect, OppInput }) {
   return (
     <>
       <div className="flex items-center justify-between mt-2 mb-2">
@@ -836,7 +845,7 @@ function PairList({ day, pairs, canEdit, addPair, removePair, updatePair, update
                 <OppInput value={p.opp[1]} onChange={(v) => updatePair(day, idx, 'opp', 1, v)} placeholder="Gegner B" />
               </div>
             </div>
-            <HoleTracker holeResults={p.holeResults} holesN={DAY_META[day].holesN} canEdit={canEdit} onSet={(hole, val) => setPairHole(day, idx, hole, val)} />
+            <HoleTracker holeResults={p.holeResults} holesN={DAY_META[day].holesN} canEdit={canScore} onSet={(hole, val) => setPairHole(day, idx, hole, val)} />
           </div>
         ))}
       </div>
@@ -1040,6 +1049,45 @@ function ShareSheet({ onClose }) {
             <button onClick={copy} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-bold transition"><Copy className="w-4 h-4" />{copied ? 'Kopiert ✓' : 'Link kopieren'}</button>
             <a href={wa} target="_blank" rel="noopener" className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition">WhatsApp</a>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScoreLogin({ onClose }) {
+  const [email, setEmail] = useState('sekretariat@reidercup.app');
+  const [pw, setPw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const submit = async () => {
+    if (!pw || !window.RCAUTH || !window.RCAUTH.scoreLogin) return;
+    setBusy(true); setErr('');
+    try { await window.RCAUTH.scoreLogin(email.trim(), pw); onClose(); }
+    catch (e) { setErr('Login fehlgeschlagen – Benutzer/Passwort prüfen.'); setBusy(false); }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
+        <div className="relative bg-gradient-to-br from-[#0d2240] to-[#0a1a31] text-white px-6 py-5">
+          <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
+          <button onClick={onClose} aria-label="Schließen" className="absolute top-3 right-3 p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition"><X className="w-5 h-5" /></button>
+          <div className="text-[10px] uppercase tracking-[0.28em] text-[#c8a44d] font-bold mb-1">Sekretariat</div>
+          <h2 className="display text-2xl font-bold leading-none">Score-Login</h2>
+          <p className="text-xs text-slate-300 mt-2">Nur zum Eintragen der Lochergebnisse.</p>
+        </div>
+        <div className="p-6 space-y-3">
+          <div>
+            <label className="text-[11px] font-semibold text-stone-600 uppercase tracking-wider block mb-1">Benutzer</label>
+            <input value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-[#0d2240] focus:ring-2 focus:ring-slate-200" />
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold text-stone-600 uppercase tracking-wider block mb-1">Passwort</label>
+            <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submit(); }} className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-[#0d2240] focus:ring-2 focus:ring-slate-200" />
+          </div>
+          {err && <p className="text-xs text-red-700">{err}</p>}
+          <button onClick={submit} disabled={busy || !pw} className="w-full px-4 py-2.5 bg-[#0d2240] text-white rounded-xl text-sm font-bold hover:bg-[#102a4c] transition disabled:bg-stone-300 disabled:cursor-not-allowed">{busy ? 'Anmelden…' : 'Anmelden'}</button>
         </div>
       </div>
     </div>
@@ -1256,6 +1304,7 @@ const FIREBASE_CONFIG = {
 };
 
 const OWNER_UID = "MwVBZFBYc9WV6Bocb4ieLW2bWFx2";
+const SCORER_EMAILS = ["sekretariat@reidercup.app"]; // darf NUR Lochergebnisse eintippen
 const TOURNAMENT_ID = "reider-cup-2026";
 
 function whenReady(cb) {
@@ -1274,7 +1323,7 @@ function whenReady(cb) {
   } catch (e) { whenReady(() => window.RC.setStatus("offline – nur dieses Gerät")); return; }
 
   const { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
-          getRedirectResult, onAuthStateChanged, signOut, getFirestore, doc, getDoc, setDoc, onSnapshot } = mod;
+          getRedirectResult, onAuthStateChanged, signOut, signInWithEmailAndPassword, getFirestore, doc, getDoc, setDoc, onSnapshot } = mod;
 
   const app = initializeApp(FIREBASE_CONFIG);
   const auth = getAuth(app);
@@ -1283,11 +1332,11 @@ function whenReady(cb) {
   const ref = doc(db, "tournaments", TOURNAMENT_ID);
   const ownerConfigured = !!OWNER_UID;
 
-  let editable = false, lastJSON = "", pushTimer = null;
+  let canWrite = false, lastJSON = "", pushTimer = null;
 
   whenReady(() => {
     window.RC.pushChange = (data) => {
-      if (!editable) return;
+      if (!canWrite) return;
       window.RC.setStatus("…");
       if (pushTimer) clearTimeout(pushTimer);
       pushTimer = setTimeout(() => pushNow(data), 1200);
@@ -1313,13 +1362,18 @@ function whenReady(cb) {
 
   onAuthStateChanged(auth, (user) => {
     const u = user ? user.uid : null;
-    editable = !!user && (!ownerConfigured || u === OWNER_UID);
-    if (window.RC.setAuth) window.RC.setAuth({ editable, uid: u, ownerConfigured });
-    if (user && !editable) window.RC.setStatus("angemeldet (keine Bearbeitungsrechte)");
+    const email = user ? (user.email || "") : "";
+    const owner = !!user && (!ownerConfigured || u === OWNER_UID);
+    const scorer = !!user && (owner || SCORER_EMAILS.includes(email));
+    canWrite = scorer;
+    if (window.RC.setAuth) window.RC.setAuth({ editable: owner, scorer, uid: u, ownerConfigured });
+    if (user && !scorer) window.RC.setStatus("angemeldet (keine Rechte)");
+    else if (scorer && !owner) window.RC.setStatus("Score-Modus aktiv");
   });
 
   window.RCAUTH = {
     login: async () => { try { await signInWithPopup(auth, provider); } catch (e) { try { await signInWithRedirect(auth, provider); } catch (_) { alert("Anmeldung nicht möglich: " + (e.message || e)); } } },
+    scoreLogin: async (email, pw) => { await signInWithEmailAndPassword(auth, email, pw); },
     logout: async () => { try { await signOut(auth); } catch (e) {} }
   };
 })();
