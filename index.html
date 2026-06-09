@@ -175,9 +175,9 @@ function matchOutcome(holeResults, holesN) {
   const lead = red - opp, remaining = holesN - played, absLead = Math.abs(lead);
   let point = '', decided = false, label = '';
   if (played > 0) {
-    if (remaining === 0) { decided = true; point = lead > 0 ? 'red' : lead < 0 ? 'opp' : 'half'; label = lead === 0 ? 'Geteilt' : (lead > 0 ? `Rot gewinnt ${lead} auf` : `Gegner gewinnt ${absLead} auf`); }
-    else if (absLead > remaining) { decided = true; point = lead > 0 ? 'red' : 'opp'; label = `${lead > 0 ? 'Rot' : 'Gegner'} gewinnt ${absLead}&${remaining}`; }
-    else { label = (lead > 0 ? `Rot ${lead} auf` : lead < 0 ? `Gegner ${absLead} auf` : 'ausgeglichen') + ` · nach ${played}`; }
+    if (remaining === 0) { decided = true; point = lead > 0 ? 'red' : lead < 0 ? 'opp' : 'half'; label = lead === 0 ? 'Geteilt' : (lead > 0 ? `Rot gewinnt ${lead} auf` : `Blau gewinnt ${absLead} auf`); }
+    else if (absLead > remaining) { decided = true; point = lead > 0 ? 'red' : 'opp'; label = `${lead > 0 ? 'Rot' : 'Blau'} gewinnt ${absLead}&${remaining}`; }
+    else { label = (lead > 0 ? `Rot ${lead} auf` : lead < 0 ? `Blau ${absLead} auf` : 'ausgeglichen') + ` · nach ${played}`; }
   }
   return { red, opp, played, remaining, lead, decided, point, label };
 }
@@ -223,11 +223,11 @@ function makeQR(text) {
   try { const qr = window.qrcode(0, 'M'); qr.addData(text); qr.make(); return qr.createDataURL(6, 10); } catch (e) { return ''; }
 }
 
-/* ---------- Strategien: Sonntag-Einzel-Reihenfolge je nach Gegner-Annahme ---------- */
+/* ---------- Strategien: Sonntag-Einzel-Reihenfolge je nach Blau-Annahme ---------- */
 const STRATEGIES = [
   { key: 'midhighlow', label: 'Mitte→Hoch→Niedrig', desc: 'Unsere Strategie: Start mit mittlerem HCP, dann die hohen HCP, die niedrigsten (stärksten) Spieler als Anker zum Schluss.' },
   { key: 'standard', label: 'Ausgewogen', desc: 'Neutral, wenn Blaus Aufstellung unklar ist: Höchster HCP als Front-„Schwamm" (netto konkurrenzfähig, fängt Blaus Nr. 1 ab), dahinter stark → schwach.' },
-  { key: 'counter', label: 'Konter: Gegner stark zuerst', desc: 'Annahme: Blau schickt – wie beim Ryder-Cup-Comeback – die Stärksten zuerst. Wir setzen die 2 höchsten HCP als „Schwämme" nach vorne und schieben unsere Stärke ins Mittelfeld → klaut dort Matches.' },
+  { key: 'counter', label: 'Konter: Blau stark zuerst', desc: 'Annahme: Blau schickt – wie beim Ryder-Cup-Comeback – die Stärksten zuerst. Wir setzen die 2 höchsten HCP als „Schwämme" nach vorne und schieben unsere Stärke ins Mittelfeld → klaut dort Matches.' },
   { key: 'momentum', label: 'Momentum: früh führen', desc: 'Unsere Stärksten zuerst – schnell Punkte aufs Board, Druck aufbauen (gut, wenn man früh in Führung gehen will).' },
   { key: 'anchor', label: 'Anker: stark zum Schluss', desc: 'Stärkste Spieler ans Ende – für ein knappes Finish, wenn die Entscheidung spät fällt.' },
 ];
@@ -431,12 +431,12 @@ function ReiderCup() {
     setData(normalize(IMPORT_DATA));
   };
   const applyStrategy = (key) => {
-    if (!window.confirm('Sonntag-Einzel nach dieser Strategie neu sortieren?\nGegner-Eintragungen und Ergebnisse bleiben pro Spieler erhalten.')) return;
+    if (!window.confirm('Sonntag-Einzel nach dieser Strategie neu sortieren?\nBlau-Eintragungen und Ergebnisse bleiben pro Spieler erhalten.')) return;
     setData(applySundayStrategy(data, key));
   };
   const applyFromCompare = (dayKey, variant) => {
     const label = dayKey === 'day3' ? 'Sonntag-Reihenfolge' : (dayKey === 'day1' ? 'Freitag-Paarungen' : 'Samstag-Paarungen');
-    if (!window.confirm(`${label} nach dieser Variante übernehmen?\nDie Aufstellung dieses Tages wird neu gesetzt (Zeiten neu, Gegner/Ergebnisse dieses Tages zurückgesetzt).`)) return;
+    if (!window.confirm(`${label} nach dieser Variante übernehmen?\nDie Aufstellung dieses Tages wird neu gesetzt (Zeiten neu, Blau/Ergebnisse dieses Tages zurückgesetzt).`)) return;
     setData(dayKey === 'day3' ? applySundayStrategy(data, variant) : applyDayPairsData(data, dayKey, variant));
     setStratCompare(false);
   };
@@ -500,9 +500,9 @@ function ReiderCup() {
     );
   };
   const OppInput = ({ value, onChange, placeholder }) => {
-    if (!canEdit) return <div className="w-full px-3 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700">{value || '—'}</div>;
+    if (!canEdit) return <div className="w-full px-3 py-2.5 rounded-lg border border-blue-200 bg-blue-50/60 text-sm font-semibold text-blue-900">{value || '—'}</div>;
     return <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-      className="w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white text-sm font-medium text-stone-700 focus:outline-none focus:border-slate-600 focus:ring-2 focus:ring-slate-200 placeholder:text-stone-400" />;
+      className="w-full px-3 py-2.5 rounded-lg border border-blue-200 bg-white text-sm font-medium text-blue-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-200 placeholder:text-stone-400" />;
   };
   const DayBadge = ({ active, label }) => (
     <span className={`inline-flex items-center justify-center text-[10px] font-bold rounded px-1.5 py-0.5 ${active ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-400 line-through'}`}>{label}</span>
@@ -712,7 +712,7 @@ function ReiderCup() {
           </DayCard>
 
           <DayCard dayKey="day3" icon={<Swords className="w-5 h-5" />} availableCount={availableFor('day3').length}>
-            <FormatExplanation rule="Jeder Spieler tritt im Einzel (2er-Flight) gegen einen Gegner an. Gewertet wird das Nettoergebnis mit ¾ Vorgabe: Wer das Loch netto besser spielt, gewinnt es." />
+            <FormatExplanation rule="Jeder Spieler tritt im Einzel (2er-Flight) gegen das blaue Team an. Gewertet wird das Nettoergebnis mit ¾ Vorgabe: Wer das Loch netto besser spielt, gewinnt es." />
             <MatchPlaySVG />
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs uppercase tracking-wider font-bold text-slate-700">Einzelmatches</h3>
@@ -731,7 +731,7 @@ function ReiderCup() {
                   <div className="space-y-2">
                     <PlayerSelect value={m.own} onChange={(v) => updateMatch(idx, 'own', v)} placeholder="Rotes Team · Spieler" day="day3" />
                     <div className="text-center text-xs text-slate-400 italic">vs.</div>
-                    <OppInput value={m.opp} onChange={(v) => updateMatch(idx, 'opp', v)} placeholder="Gegner · Name" />
+                    <OppInput value={m.opp} onChange={(v) => updateMatch(idx, 'opp', v)} placeholder="Blaues Team · Name" />
                   </div>
                   <HoleTracker holeResults={m.holeResults} holesN={9} canEdit={canScore} onSet={(hole, val) => setMatchHole(idx, hole, val)} />
                 </div>
@@ -778,13 +778,13 @@ function HoleTracker({ holeResults, holesN, canEdit, onSet }) {
   const hr = holeResults || [];
   const o = matchOutcome(hr, holesN);
   const cycle = { '': 'red', red: 'half', half: 'opp', opp: '' };
-  const color = (s) => s === 'red' ? 'bg-red-700 text-white border-red-700' : s === 'opp' ? 'bg-slate-600 text-white border-slate-600' : s === 'half' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-stone-400 border-stone-300';
+  const color = (s) => s === 'red' ? 'bg-red-700 text-white border-red-700' : s === 'opp' ? 'bg-blue-700 text-white border-blue-700' : s === 'half' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-stone-400 border-stone-300';
   if (!canEdit && o.played === 0) return null;
   return (
     <div className="mt-2 pt-2 border-t border-slate-200/70">
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Loch für Loch</span>
-        {o.label && <span className={`text-[11px] font-bold ${o.decided ? (o.point === 'red' ? 'text-red-700' : o.point === 'opp' ? 'text-slate-600' : 'text-amber-600') : 'text-slate-600'}`}>{o.label}</span>}
+        {o.label && <span className={`text-[11px] font-bold ${o.decided ? (o.point === 'red' ? 'text-red-700' : o.point === 'opp' ? 'text-blue-700' : 'text-amber-600') : 'text-slate-600'}`}>{o.label}</span>}
       </div>
       <div className="grid grid-cols-9 gap-1">
         {Array.from({ length: holesN }).map((_, i) => {
@@ -794,14 +794,14 @@ function HoleTracker({ holeResults, holesN, canEdit, onSet }) {
             : <div key={i} className={`aspect-square rounded text-[10px] font-bold border flex items-center justify-center ${color(s)}`}>{i + 1}</div>;
         })}
       </div>
-      {canEdit && <p className="text-[10px] text-stone-400 mt-1.5">Tippen: leer → <span className="text-red-700 font-bold">Rot</span> → <span className="text-amber-600 font-bold">½</span> → <span className="text-slate-600 font-bold">Gegner</span></p>}
+      {canEdit && <p className="text-[10px] text-stone-400 mt-1.5">Tippen: leer → <span className="text-red-700 font-bold">Rot</span> → <span className="text-amber-600 font-bold">½</span> → <span className="text-blue-700 font-bold">Blau</span></p>}
     </div>
   );
 }
 
 function ResultControl({ value, canEdit, onChange }) {
   if (canEdit) {
-    const opts = [['red', 'Rot', 'bg-red-700 text-white'], ['half', '½', 'bg-amber-500 text-white'], ['opp', 'Gegner', 'bg-slate-600 text-white']];
+    const opts = [['red', 'Rot', 'bg-red-700 text-white'], ['half', '½', 'bg-amber-500 text-white'], ['opp', 'Blau', 'bg-blue-700 text-white']];
     return (
       <div className="inline-flex rounded-md overflow-hidden border border-stone-300">
         {opts.map(([v, label, act]) => (
@@ -811,7 +811,7 @@ function ResultControl({ value, canEdit, onChange }) {
     );
   }
   if (!value) return null;
-  const map = { red: ['Rot gewonnen', 'bg-red-100 text-red-800'], half: ['Geteilt', 'bg-amber-100 text-amber-800'], opp: ['Gegner', 'bg-slate-200 text-slate-700'] };
+  const map = { red: ['Rot gewonnen', 'bg-red-100 text-red-800'], half: ['Geteilt', 'bg-amber-100 text-amber-800'], opp: ['Blau gewonnen', 'bg-blue-100 text-blue-800'] };
   const [t, c] = map[value] || ['', ''];
   return <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${c}`}>{t}</span>;
 }
@@ -840,9 +840,9 @@ function PairList({ day, pairs, canEdit, canScore, addPair, removePair, updatePa
                 <PlayerSelect value={p.own[1]} onChange={(v) => updatePair(day, idx, 'own', 1, v)} placeholder="Spieler B" day={day} />
               </div>
               <div className="space-y-1.5 pt-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Gegner</div>
-                <OppInput value={p.opp[0]} onChange={(v) => updatePair(day, idx, 'opp', 0, v)} placeholder="Gegner A" />
-                <OppInput value={p.opp[1]} onChange={(v) => updatePair(day, idx, 'opp', 1, v)} placeholder="Gegner B" />
+                <div className="text-[10px] font-bold uppercase tracking-wider text-blue-800">Blaues Team</div>
+                <OppInput value={p.opp[0]} onChange={(v) => updatePair(day, idx, 'opp', 0, v)} placeholder="Blau A" />
+                <OppInput value={p.opp[1]} onChange={(v) => updatePair(day, idx, 'opp', 1, v)} placeholder="Blau B" />
               </div>
             </div>
             <HoleTracker holeResults={p.holeResults} holesN={DAY_META[day].holesN} canEdit={canScore} onSet={(hole, val) => setPairHole(day, idx, hole, val)} />
@@ -921,8 +921,8 @@ function PlayerDetail({ name, data, playerByName, fmtName, canEdit, onClose, onE
                   {e.key !== 'day3' && (
                     <div className="mt-1.5"><span className="text-stone-400 text-xs uppercase tracking-wide mr-2">Partner</span><span className="font-semibold text-red-900">{e.partner ? fmtName(e.partner) : '—'}</span></div>
                   )}
-                  <div className="mt-1.5"><span className="text-stone-400 text-xs uppercase tracking-wide mr-2">Gegen</span><span className="font-semibold text-slate-700">{e.opp.length ? e.opp.join(' & ') : '—'}</span></div>
-                  {e.result && <div className="mt-1.5"><span className="text-stone-400 text-xs uppercase tracking-wide mr-2">Ergebnis</span><span className={`font-bold ${e.result === 'red' ? 'text-red-700' : e.result === 'opp' ? 'text-slate-600' : 'text-amber-600'}`}>{e.result === 'red' ? 'Rot gewonnen' : e.result === 'opp' ? 'Gegner gewonnen' : 'Geteilt'}</span></div>}
+                  <div className="mt-1.5"><span className="text-stone-400 text-xs uppercase tracking-wide mr-2">Blaues Team</span><span className="font-semibold text-blue-800">{e.opp.length ? e.opp.join(' & ') : '—'}</span></div>
+                  {e.result && <div className="mt-1.5"><span className="text-stone-400 text-xs uppercase tracking-wide mr-2">Ergebnis</span><span className={`font-bold ${e.result === 'red' ? 'text-red-700' : e.result === 'opp' ? 'text-blue-700' : 'text-amber-600'}`}>{e.result === 'red' ? 'Rot gewonnen' : e.result === 'opp' ? 'Blau gewonnen' : 'Geteilt'}</span></div>}
                 </div>
               </div>
             );
@@ -956,11 +956,11 @@ function ScoreBoard({ data }) {
           <div className="flex items-end justify-between mb-3">
             <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-red-700 font-bold mb-0.5">Rotes Team</div><div className="display text-5xl font-bold text-red-800 leading-none">{fmtPts(s.red)}</div></div>
             <div className="text-stone-300 text-2xl font-light px-3 pb-1">:</div>
-            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-slate-600 font-bold mb-0.5">Gegner</div><div className="display text-5xl font-bold text-slate-700 leading-none">{fmtPts(s.opp)}</div></div>
+            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-blue-700 font-bold mb-0.5">Blaues Team</div><div className="display text-5xl font-bold text-blue-800 leading-none">{fmtPts(s.opp)}</div></div>
           </div>
           <div className="h-2.5 rounded-full overflow-hidden bg-slate-200 flex">
             <div className="bg-red-700 h-full transition-all duration-500" style={{ width: redPct + '%' }} />
-            <div className="bg-slate-500 h-full transition-all duration-500" style={{ width: oppPct + '%' }} />
+            <div className="bg-blue-600 h-full transition-all duration-500" style={{ width: oppPct + '%' }} />
           </div>
           {s.decided === 0 && <p className="text-[11px] text-center text-stone-400 italic mt-3">Noch keine Ergebnisse eingetragen</p>}
         </div>
@@ -1162,7 +1162,7 @@ function StrategyCompare({ data, canEdit, onApply, onClose }) {
               );
             })}
           </div>
-          <p className="text-[10px] text-stone-400 mt-2">{isSun ? 'Reihenfolge = Tee-Zeiten. Gegner stehen erst am Spieltag fest.' : '★ = fixe Wunsch-Paarung. Zahlen = HCP. Gegner-Paare stehen erst am Spieltag fest.'}</p>
+          <p className="text-[10px] text-stone-400 mt-2">{isSun ? 'Reihenfolge = Tee-Zeiten. Das blaue Team steht erst am Spieltag fest.' : '★ = fixe Wunsch-Paarung. Zahlen = HCP. Die Paare vom blauen Team stehen erst am Spieltag fest.'}</p>
 
           {canEdit
             ? <button onClick={() => onApply(dayTab, sel)} className="w-full mt-4 px-4 py-2.5 bg-red-800 text-white rounded-xl text-sm font-bold hover:bg-red-900 transition">Für {dayLabels[dayTab]} übernehmen</button>
@@ -1221,11 +1221,11 @@ function generatePlanHTML(data, focus) {
       return `<tr><td class="num">${META[k].l}</td><td>${META[k].f}</td><td class="time">${esc(e.time) || '—'}</td><td>${k !== 'day3' ? fmtPlayer(e.partner) : '<span class="meta">Einzel</span>'}</td><td>${e.opp.length ? e.opp.map(esc).join(' &amp; ') : '—'}</td></tr>`;
     }).join('');
     return HEAD + `<div class="header"><div class="subtitle">Persönlicher Spielplan</div><h1>${esc(focus)}${p && p.hcp != null ? ` <em>· HCP ${p.hcp}</em>` : ''}</h1><div class="info">(R)Eider Cup 2026 · 12.–14. Juni · Rotes Team</div></div>
-<table><thead><tr><th>Tag</th><th>Wettbewerb</th><th>Start</th><th>Partner</th><th>Gegner</th></tr></thead><tbody>${rows || '<tr><td colspan="5"><span class="meta">Noch keiner Begegnung zugeordnet.</span></td></tr>'}</tbody></table>` + FOOT;
+<table><thead><tr><th>Tag</th><th>Wettbewerb</th><th>Start</th><th>Partner</th><th>Blaues Team</th></tr></thead><tbody>${rows || '<tr><td colspan="5"><span class="meta">Noch keiner Begegnung zugeordnet.</span></td></tr>'}</tbody></table>` + FOOT;
   }
 
   const dayTable = (k, rows) => `<section><div class="day-head"><div><span class="day-label">${META[k].l}</span><h2>${META[k].f}</h2></div><div class="date">${META[k].d}</div></div>
-<table><thead><tr><th>Start</th><th>${k === 'day3' ? 'Match' : 'Paarung'}</th><th>Rotes Team</th>${k === 'day3' ? '<th></th>' : ''}<th>Gegner</th></tr></thead><tbody>${rows}</tbody></table></section>`;
+<table><thead><tr><th>Start</th><th>${k === 'day3' ? 'Match' : 'Paarung'}</th><th>Rotes Team</th>${k === 'day3' ? '<th></th>' : ''}<th>Blaues Team</th></tr></thead><tbody>${rows}</tbody></table></section>`;
 
   const pairRows = (pairs) => pairs.map((p, i) => `<tr><td class="time">${esc(p.time) || '—'}</td><td class="num">${i + 1}</td><td><div>${fmtPlayer(p.own[0])}</div><div>${fmtPlayer(p.own[1])}</div></td><td><div>${esc(p.opp[0]) || '—'}</div><div>${esc(p.opp[1]) || '—'}</div></td></tr>`).join('');
   const matchRows = data.day3.matches.map((m, i) => `<tr><td class="time">${esc(m.time) || '—'}</td><td class="num">${i + 1}</td><td>${fmtPlayer(m.own)}</td><td class="vs">vs.</td><td>${esc(m.opp) || '—'}</td></tr>`).join('');
