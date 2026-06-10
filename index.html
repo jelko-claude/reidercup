@@ -73,6 +73,7 @@ const Calendar= Icon(<><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" hei
 
 const VIEW_URL = 'https://reidercup.pages.dev/';
 const EVENT_START = new Date('2026-06-12T14:30:00');
+const REVEAL_TIME = new Date('2026-06-12T12:00:00'); // Aufstellung öffentlich sichtbar ab Fr 12:00 (Admin sieht immer alles)
 
 /* ---------- Daten ---------- */
 const DAY_META = {
@@ -487,6 +488,15 @@ function ReiderCup() {
 
   const scoreOnly = canScore && !canEdit; // Sekretariat: nur Score eintragen
 
+  // Aufstellung erst ab Fr 12:00 öffentlich (schaltet automatisch frei, Admin sieht immer alles)
+  const [revealed, setRevealed] = useState(() => Date.now() >= REVEAL_TIME.getTime());
+  useEffect(() => {
+    if (revealed) return;
+    const id = setInterval(() => { if (Date.now() >= REVEAL_TIME.getTime()) setRevealed(true); }, 15000);
+    return () => clearInterval(id);
+  }, [revealed]);
+  const lineupVisible = canEdit || revealed;
+
   const exportPlan = (focus) => {
     const html = generatePlanHTML(data, focus || null, canEdit);
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
@@ -557,7 +567,7 @@ function ReiderCup() {
                         {scoreEntry && <button onClick={() => setScoreLoginOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg text-xs font-semibold transition"><Lock className="w-3.5 h-3.5" /> Score-Login</button>}
                       </>}
                   {!scoreOnly && <button onClick={() => setShareOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg text-xs font-semibold transition"><Share2 className="w-3.5 h-3.5" /> Teilen</button>}
-                  {!scoreOnly && <button onClick={() => exportPlan(null)} className="inline-flex items-center gap-2 px-3 py-2 bg-[#c8a44d] hover:bg-[#b8923c] text-[#3a2a08] rounded-lg text-xs font-bold shadow transition">
+                  {!scoreOnly && lineupVisible && <button onClick={() => exportPlan(null)} className="inline-flex items-center gap-2 px-3 py-2 bg-[#c8a44d] hover:bg-[#b8923c] text-[#3a2a08] rounded-lg text-xs font-bold shadow transition">
                     <Printer className="w-3.5 h-3.5" /> Gesamtplan
                   </button>}
                 </div>
@@ -715,7 +725,16 @@ function ReiderCup() {
           {/* ===== Konflikt-Warnungen ===== */}
           <ConflictsCard data={data} />
 
-          {/* ===== Tage ===== */}
+          {/* ===== Tage (öffentlich erst ab Fr 12:00) ===== */}
+          {!lineupVisible && (
+          <div className="px-5 mb-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 p-8 text-center">
+              <Lock className="w-8 h-8 mx-auto text-[#c8a44d] mb-3" />
+              <h3 className="display text-xl font-semibold text-slate-900 mb-1">Aufstellungen noch unter Verschluss</h3>
+              <p className="text-sm text-stone-500">Die Paarungen und Startzeiten aller drei Tage werden am<br /><b className="text-slate-800">Freitag, 12. Juni um 12:00 Uhr</b> veröffentlicht.</p>
+            </div>
+          </div>)}
+          {lineupVisible && (<>
           <DayCard dayKey="day1" icon={<Flag className="w-5 h-5" />} availableCount={availableFor('day1').length}>
             <FormatExplanation rule="Beide Spieler spielen ihren eigenen Ball. Auf jedem Loch zählt das bessere Nettoergebnis des Teams (Schläge minus Vorgabe) – gespielt mit ¾ der Spielvorgabe." />
             <BestballSVG />
@@ -756,6 +775,7 @@ function ReiderCup() {
               ))}
             </div>
           </DayCard>
+          </>)}
 
           <div className="px-5 pb-10 pt-2">
             <p className="text-xs text-center text-stone-400 italic">
@@ -770,7 +790,7 @@ function ReiderCup() {
       {detail && (
         <PlayerDetail
           name={detail} data={data} playerByName={playerByName} fmtName={fmtName} bluePlayers={bluePlayers}
-          canEdit={canEdit} onClose={() => setDetail(null)} onEdit={startEdit} onExport={() => exportPlan(detail)} />
+          canEdit={canEdit} lineupVisible={lineupVisible} onClose={() => setDetail(null)} onEdit={startEdit} onExport={() => exportPlan(detail)} />
       )}
 
       {/* ===== Teilen-Modal ===== */}
@@ -917,12 +937,12 @@ function FormatExplanation({ rule, note }) {
   return <div className={`border-l-2 pl-3 py-1 text-sm leading-relaxed mb-1 ${note ? 'border-[#c8a44d] text-slate-600 italic' : 'border-red-700 text-slate-700'}`}>{rule}</div>;
 }
 
-function PlayerDetail({ name, data, playerByName, fmtName, canEdit, bluePlayers, onClose, onEdit, onExport }) {
+function PlayerDetail({ name, data, playerByName, fmtName, canEdit, bluePlayers, lineupVisible, onClose, onEdit, onExport }) {
   const p = playerByName(name);
   const isBlue = !p;
   const bp = isBlue ? (bluePlayers || []).find((x) => x.name === name) : null;
   const avail = p ? p.available : (bp ? bp.available : {});
-  const sched = isBlue ? computeScheduleBlue(data, name) : computeSchedule(data, name);
+  const sched = lineupVisible ? (isBlue ? computeScheduleBlue(data, name) : computeSchedule(data, name)) : [];
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
@@ -941,7 +961,9 @@ function PlayerDetail({ name, data, playerByName, fmtName, canEdit, bluePlayers,
         </div>
 
         <div className="p-5 space-y-3">
-          {sched.length === 0 ? (
+          {!lineupVisible ? (
+            <p className="text-sm text-stone-500 italic text-center py-4">🔒 Der Spielplan wird am Freitag, 12. Juni um 12:00 Uhr veröffentlicht.</p>
+          ) : sched.length === 0 ? (
             <p className="text-sm text-stone-500 italic text-center py-4">Noch keiner Paarung / keinem Match zugeordnet.</p>
           ) : sched.map((e, i) => {
             const m = DAY_META[e.key];
@@ -968,7 +990,7 @@ function PlayerDetail({ name, data, playerByName, fmtName, canEdit, bluePlayers,
             );
           })}
 
-          {!isBlue && (
+          {!isBlue && lineupVisible && (
           <div className="flex gap-2 pt-1">
             <button onClick={onExport} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#c8a44d] hover:bg-[#b8923c] text-[#3a2a08] rounded-xl text-sm font-bold transition">
               <Printer className="w-4 h-4" /> Einzelplan
