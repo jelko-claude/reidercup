@@ -458,7 +458,7 @@ function ReiderCup() {
 
   const availableFor = (day) => data.roster.filter((p) => p.available?.[day]);
   const playerByName = (name) => data.roster.find((p) => p.name === name);
-  const fmtName = (name) => { const p = playerByName(name); return p && p.hcp != null ? `${name} · HCP ${p.hcp}` : name; };
+  const fmtName = (name) => { const p = playerByName(name); return canEdit && p && p.hcp != null ? `${name} · HCP ${p.hcp}` : name; };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -469,7 +469,7 @@ function ReiderCup() {
   const scoreOnly = canScore && !canEdit; // Sekretariat: nur Score eintragen
 
   const exportPlan = (focus) => {
-    const html = generatePlanHTML(data, focus || null);
+    const html = generatePlanHTML(data, focus || null, canEdit);
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const newWin = window.open(url, '_blank');
@@ -603,7 +603,7 @@ function ReiderCup() {
                         className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-red-50 transition border-b border-stone-100 last:border-0">
                         <span className="font-semibold text-slate-800 text-sm">{p.name}</span>
                         <span className="flex items-center gap-1.5">
-                          {p.hcp != null && <span className="text-[11px] text-stone-500">HCP {p.hcp}</span>}
+                          {canEdit && p.hcp != null && <span className="text-[11px] text-stone-500">HCP {p.hcp}</span>}
                           <span className="flex gap-0.5">
                             {['day1','day2','day3'].map((d) => <DayBadge key={d} active={p.available?.[d]} label={DAY_META[d].short} />)}
                           </span>
@@ -908,7 +908,7 @@ function PlayerDetail({ name, data, playerByName, fmtName, canEdit, onClose, onE
           <div className="text-[10px] uppercase tracking-[0.28em] text-[#e9cf8f] font-bold mb-1">Spielplan</div>
           <h2 className="display text-3xl font-bold leading-none">{name}</h2>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
-            {p && p.hcp != null && <span className="text-xs bg-white/15 px-2 py-0.5 rounded font-semibold">HCP {p.hcp}</span>}
+            {canEdit && p && p.hcp != null && <span className="text-xs bg-white/15 px-2 py-0.5 rounded font-semibold">HCP {p.hcp}</span>}
             {['day1','day2','day3'].map((d) => (
               <span key={d} className={`text-[10px] font-bold rounded px-1.5 py-0.5 ${p?.available?.[d] ? 'bg-emerald-400/25 text-emerald-100' : 'bg-white/10 text-white/40 line-through'}`}>{DAY_META[d].short}</span>
             ))}
@@ -1189,9 +1189,9 @@ function StrategyCompare({ data, canEdit, onApply, onClose }) {
 }
 
 /* ---------- Export ---------- */
-function generatePlanHTML(data, focus) {
+function generatePlanHTML(data, focus, showHcp) {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const fmtPlayer = (name) => { if (!name) return '—'; const p = data.roster.find((x) => x.name === name); if (!p) return esc(name); return p.hcp != null ? `${esc(name)} <span class="meta">(HCP ${p.hcp})</span>` : esc(name); };
+  const fmtPlayer = (name) => { if (!name) return '—'; const p = data.roster.find((x) => x.name === name); if (!p) return esc(name); return showHcp && p.hcp != null ? `${esc(name)} <span class="meta">(HCP ${p.hcp})</span>` : esc(name); };
   const today = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
   const META = { day1: { l: 'Tag 1', f: 'Bestball · 9 Loch', d: 'Freitag, 12. Juni' }, day2: { l: 'Tag 2', f: 'Klassischer Vierer · 18 Loch', d: 'Samstag, 13. Juni' }, day3: { l: 'Tag 3', f: 'Lochspiel · Einzel · 9 Loch', d: 'Sonntag, 14. Juni' } };
 
@@ -1235,7 +1235,7 @@ function generatePlanHTML(data, focus) {
       if (!e) return '';
       return `<tr><td class="num">${META[k].l}</td><td>${META[k].f}</td><td class="time">${esc(e.time) || '—'}</td><td>${k !== 'day3' ? fmtPlayer(e.partner) : '<span class="meta">Einzel</span>'}</td><td>${e.opp.length ? e.opp.map(esc).join(' &amp; ') : '—'}</td></tr>`;
     }).join('');
-    return HEAD + `<div class="header"><div class="subtitle">Persönlicher Spielplan</div><h1>${esc(focus)}${p && p.hcp != null ? ` <em>· HCP ${p.hcp}</em>` : ''}</h1><div class="info">(R)Eider Cup 2026 · 12.–14. Juni · Rotes Team</div></div>
+    return HEAD + `<div class="header"><div class="subtitle">Persönlicher Spielplan</div><h1>${esc(focus)}${showHcp && p && p.hcp != null ? ` <em>· HCP ${p.hcp}</em>` : ''}</h1><div class="info">(R)Eider Cup 2026 · 12.–14. Juni · Rotes Team</div></div>
 <table><thead><tr><th>Tag</th><th>Wettbewerb</th><th>Start</th><th>Partner</th><th>Blaues Team</th></tr></thead><tbody>${rows || '<tr><td colspan="5"><span class="meta">Noch keiner Begegnung zugeordnet.</span></td></tr>'}</tbody></table>` + FOOT;
   }
 
