@@ -529,7 +529,7 @@ function ReiderCup() {
     );
   };
   const OppInput = ({ value, onChange, placeholder }) => {
-    if (!canEdit) return <div className="w-full px-3 py-2.5 rounded-lg border border-blue-200 bg-blue-50/60 text-sm font-semibold text-blue-900">{value || '—'}</div>;
+    if (!canEdit) return <button onClick={() => value && setDetail(value)} className={`w-full text-left px-3 py-2.5 rounded-lg border border-blue-200 text-sm font-semibold ${value ? 'bg-blue-50/60 text-blue-900 hover:bg-blue-100/70 transition' : 'bg-stone-50 text-stone-400'}`}>{value || '—'}</button>;
     return <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
       className="w-full px-3 py-2.5 rounded-lg border border-blue-200 bg-white text-sm font-medium text-blue-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-200 placeholder:text-stone-400" />;
   };
