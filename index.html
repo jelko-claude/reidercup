@@ -1414,7 +1414,7 @@ function whenReady(cb) {
   } catch (e) { whenReady(() => window.RC.setStatus("offline – nur dieses Gerät")); return; }
 
   const { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
-          getRedirectResult, onAuthStateChanged, signOut, signInWithEmailAndPassword, getFirestore, doc, getDoc, setDoc, onSnapshot } = mod;
+          getRedirectResult, onAuthStateChanged, signOut, signInWithEmailAndPassword, getFirestore, doc, getDoc, setDoc, onSnapshot, increment, serverTimestamp } = mod;
 
   const app = initializeApp(FIREBASE_CONFIG);
   const auth = getAuth(app);
@@ -1422,6 +1422,14 @@ function whenReady(cb) {
   const provider = new GoogleAuthProvider();
   const ref = doc(db, "tournaments", TOURNAMENT_ID);
   const ownerConfigured = !!OWNER_UID;
+
+  // Unsichtbarer Besucherzähler (nicht in der UI angezeigt; nur per Firestore auslesbar): analytics/global
+  try {
+    const aref = doc(db, "analytics", "global");
+    let isNew = false;
+    try { isNew = !localStorage.getItem("rc_visited"); if (isNew) localStorage.setItem("rc_visited", "1"); } catch (e) {}
+    setDoc(aref, { loads: increment(1), visitors: increment(isNew ? 1 : 0), updated: serverTimestamp() }, { merge: true }).catch(() => {});
+  } catch (e) {}
 
   let canWrite = false, lastJSON = "", pushTimer = null;
 
