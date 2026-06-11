@@ -423,7 +423,7 @@ function ReiderCup() {
     if (!window.confirm('Allen Paarungen und Matches automatische Startzeiten zuweisen?\nBestehende Zeiten werden überschrieben.')) return;
     const a1 = timeSeq('14:30', 10, data.day1.pairs.length);
     const a2 = timeSeq('11:00', 10, data.day2.pairs.length);
-    const a3 = timeSeq('12:00', 10, data.day3.matches.length);
+    const a3 = timeSeq('12:00', 8, data.day3.matches.length);
     setData({ ...data,
       day1: { pairs: data.day1.pairs.map((p, i) => ({ ...p, time: a1[i] })) },
       day2: { pairs: data.day2.pairs.map((p, i) => ({ ...p, time: a2[i] })) },
@@ -496,7 +496,7 @@ function ReiderCup() {
   // Aufstellungen pro Tag zeitgesteuert freischalten (Auto-Unlock ohne Reload; Admin sieht immer alles)
   const [nowR, setNowR] = useState(() => Date.now());
   useEffect(() => { const id = setInterval(() => setNowR(Date.now()), 15000); return () => clearInterval(id); }, []);
-  const dayVisible = (k) => canEdit || !!(REVEAL_AT[k] && nowR >= REVEAL_AT[k].getTime());
+  const dayVisible = (k) => canScore || !!(REVEAL_AT[k] && nowR >= REVEAL_AT[k].getTime()); // canScore = Admin ODER Sekretariat → sehen immer alles
   const visibleDays = { day1: dayVisible('day1'), day2: dayVisible('day2'), day3: dayVisible('day3') };
   const anyVisible = visibleDays.day1 || visibleDays.day2 || visibleDays.day3;
   const lineupVisible = anyVisible; // mind. ein Tag sichtbar → Exporte (gefiltert) erlaubt
