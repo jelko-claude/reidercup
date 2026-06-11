@@ -473,7 +473,7 @@ function ReiderCup() {
 
   const availableFor = (day) => data.roster.filter((p) => p.available?.[day]);
   const playerByName = (name) => data.roster.find((p) => p.name === name);
-  const fmtName = (name) => { const p = playerByName(name); return canEdit && p && p.hcp != null ? `${name} · HCP ${p.hcp}` : name; };
+  const fmtName = (name) => name;
 
   // Blaue Spieler aus den Gegner-Feldern ableiten (inkl. Tages-Verfügbarkeit)
   const bluePlayers = useMemo(() => {
@@ -502,7 +502,7 @@ function ReiderCup() {
   const lineupVisible = anyVisible; // mind. ein Tag sichtbar → Exporte (gefiltert) erlaubt
 
   const exportPlan = (focus) => {
-    const html = generatePlanHTML(data, focus || null, canEdit, visibleDays);
+    const html = generatePlanHTML(data, focus || null, false, visibleDays);
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const newWin = window.open(url, '_blank');
@@ -524,7 +524,7 @@ function ReiderCup() {
       <select value={value} onChange={(e) => onChange(e.target.value)}
         className="w-full px-3 py-2.5 rounded-lg border border-red-200 bg-white text-sm font-medium text-red-900 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
         <option value="">{placeholder}</option>
-        {available.map((p) => <option key={p.name} value={p.name}>{p.hcp != null ? `${p.name} · HCP ${p.hcp}` : p.name}</option>)}
+        {available.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
       </select>
     );
   };
@@ -639,7 +639,7 @@ function ReiderCup() {
                           <span className={`font-semibold text-sm truncate ${p.team === 'blue' ? 'text-blue-900' : 'text-red-900'}`}>{p.name}</span>
                         </span>
                         <span className="flex items-center gap-1.5">
-                          {canEdit && p.hcp != null && <span className="text-[11px] text-stone-500">HCP {p.hcp}</span>}
+                          
                           <span className="flex gap-0.5">
                             {['day1','day2','day3'].map((d) => <DayBadge key={d} active={p.available?.[d]} label={DAY_META[d].short} />)}
                           </span>
@@ -714,7 +714,7 @@ function ReiderCup() {
                       <div key={p.name} className="flex items-center gap-2 p-2.5 bg-white border border-stone-200 rounded-lg">
                         <button onClick={() => setDetail(p.name)} className="flex-1 min-w-0 text-left">
                           <span className="font-semibold text-slate-900 text-sm">{p.name}</span>
-                          {p.hcp != null && <span className="text-xs font-medium text-stone-500 ml-2">HCP {p.hcp}</span>}
+                          
                         </button>
                         <button onClick={() => startEdit(p)} className="p-1.5 text-stone-400 hover:text-red-700 transition"><Edit2 className="w-3.5 h-3.5" /></button>
                         <button onClick={() => removePlayer(p.name)} className="p-1.5 text-stone-400 hover:text-red-700 transition"><X className="w-4 h-4" /></button>
@@ -978,7 +978,7 @@ function PlayerDetail({ name, data, playerByName, fmtName, canEdit, bluePlayers,
           <div className="text-[10px] uppercase tracking-[0.28em] text-[#e9cf8f] font-bold mb-1">Spielplan · {isBlue ? 'Blaues Team' : 'Rotes Team'}</div>
           <h2 className="display text-3xl font-bold leading-none">{name}</h2>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
-            {canEdit && p && p.hcp != null && <span className="text-xs bg-white/15 px-2 py-0.5 rounded font-semibold">HCP {p.hcp}</span>}
+            
             {['day1','day2','day3'].map((d) => (
               <span key={d} className={`text-[10px] font-bold rounded px-1.5 py-0.5 ${avail?.[d] ? 'bg-emerald-400/25 text-emerald-100' : 'bg-white/10 text-white/40 line-through'}`}>{DAY_META[d].short}</span>
             ))}
@@ -1231,7 +1231,7 @@ function StrategyCompare({ data, canEdit, onApply, onClose }) {
                   <span className="w-5 text-right font-bold text-slate-400 text-xs">{i + 1}</span>
                   <span className="w-12 text-[11px] font-bold text-[#7a5c12]">{time}</span>
                   <span className="flex-1 font-semibold text-slate-800 truncate">{n}</span>
-                  {h != null && <span className="text-[11px] text-stone-400 shrink-0">HCP {h}</span>}
+                  
                 </div>
               );
             })}
@@ -1242,9 +1242,9 @@ function StrategyCompare({ data, canEdit, onApply, onClose }) {
                   <span className="w-5 text-right font-bold text-slate-400 text-xs">{i + 1}</span>
                   <span className="w-12 text-[11px] font-bold text-[#7a5c12]">{p.time}</span>
                   <span className="flex-1 text-slate-800 leading-tight">
-                    <span className="font-semibold">{p.own[0] || '—'}</span>{h0 != null && <span className="text-[10px] text-stone-400"> {h0}</span>}
+                    <span className="font-semibold">{p.own[0] || '—'}</span>
                     <span className="text-stone-400"> + </span>
-                    <span className="font-semibold">{p.own[1] || '—'}</span>{h1 != null && <span className="text-[10px] text-stone-400"> {h1}</span>}
+                    <span className="font-semibold">{p.own[1] || '—'}</span>
                     {p.isWish && <span className="ml-1 text-[10px] text-[#c8a44d] font-bold">★</span>}
                   </span>
                 </div>
