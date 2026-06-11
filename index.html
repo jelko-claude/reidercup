@@ -20,7 +20,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=DM+Sans:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=DM+Sans:wght@400;500;600;700&family=Great+Vibes&display=swap');
   .display { font-family: 'Fraunces', Georgia, serif; font-optical-sizing: auto; }
   body { margin: 0; background: #f4f1ea; }
   .gold-rule { background: linear-gradient(90deg, transparent, #c8a44d, transparent); }
@@ -778,6 +778,10 @@ function ReiderCup() {
             <p className="text-xs text-center text-stone-400 italic">
               {canEdit ? 'Verwalten-Modus · Änderungen werden live an alle geteilt' : 'Live-Aufstellung · aktualisiert sich automatisch'}
               {status && <span className="ml-2 not-italic text-stone-500">· {status}</span>}
+            </p>
+            <p className="mt-2 text-center leading-none">
+              <span className="text-[9px] uppercase tracking-[2px] text-[#c8a44d]/70 align-middle">© created by</span>
+              <span className="ml-1.5 align-middle" style={{ fontFamily: "'Great Vibes', cursive", fontSize: '15px', color: 'rgba(200,164,77,0.75)' }}>foxy</span>
             </p>
           </div>
         </div>
