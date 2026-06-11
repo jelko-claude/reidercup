@@ -73,7 +73,12 @@ const Calendar= Icon(<><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" hei
 
 const VIEW_URL = 'https://reidercup.pages.dev/';
 const EVENT_START = new Date('2026-06-12T14:30:00');
-const REVEAL_TIME = new Date('2026-06-12T12:00:00'); // Aufstellung öffentlich sichtbar ab Fr 12:00 (Admin sieht immer alles)
+// Veröffentlichung pro Tag (null = noch nicht terminiert → bleibt gesperrt; Admin sieht immer alles)
+const REVEAL_AT = {
+  day1: new Date('2026-06-11T17:00:00'), // Freitag-Aufstellung live ab Do 17:00
+  day2: null, // Zeitpunkt folgt
+  day3: null, // Zeitpunkt folgt
+};
 
 /* ---------- Daten ---------- */
 const DAY_META = {
@@ -488,17 +493,16 @@ function ReiderCup() {
 
   const scoreOnly = canScore && !canEdit; // Sekretariat: nur Score eintragen
 
-  // Aufstellung erst ab Fr 12:00 öffentlich (schaltet automatisch frei, Admin sieht immer alles)
-  const [revealed, setRevealed] = useState(() => Date.now() >= REVEAL_TIME.getTime());
-  useEffect(() => {
-    if (revealed) return;
-    const id = setInterval(() => { if (Date.now() >= REVEAL_TIME.getTime()) setRevealed(true); }, 15000);
-    return () => clearInterval(id);
-  }, [revealed]);
-  const lineupVisible = canEdit || revealed;
+  // Aufstellungen pro Tag zeitgesteuert freischalten (Auto-Unlock ohne Reload; Admin sieht immer alles)
+  const [nowR, setNowR] = useState(() => Date.now());
+  useEffect(() => { const id = setInterval(() => setNowR(Date.now()), 15000); return () => clearInterval(id); }, []);
+  const dayVisible = (k) => canEdit || !!(REVEAL_AT[k] && nowR >= REVEAL_AT[k].getTime());
+  const visibleDays = { day1: dayVisible('day1'), day2: dayVisible('day2'), day3: dayVisible('day3') };
+  const anyVisible = visibleDays.day1 || visibleDays.day2 || visibleDays.day3;
+  const lineupVisible = anyVisible; // mind. ein Tag sichtbar → Exporte (gefiltert) erlaubt
 
   const exportPlan = (focus) => {
-    const html = generatePlanHTML(data, focus || null, canEdit);
+    const html = generatePlanHTML(data, focus || null, canEdit, visibleDays);
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const newWin = window.open(url, '_blank');
@@ -725,29 +729,23 @@ function ReiderCup() {
           {/* ===== Konflikt-Warnungen ===== */}
           <ConflictsCard data={data} />
 
-          {/* ===== Tage (öffentlich erst ab Fr 12:00) ===== */}
-          {!lineupVisible && (
-          <div className="px-5 mb-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 p-8 text-center">
-              <Lock className="w-8 h-8 mx-auto text-[#c8a44d] mb-3" />
-              <h3 className="display text-xl font-semibold text-slate-900 mb-1">Aufstellungen noch unter Verschluss</h3>
-              <p className="text-sm text-stone-500">Die Paarungen und Startzeiten aller drei Tage werden am<br /><b className="text-slate-800">Freitag, 12. Juni um 12:00 Uhr</b> veröffentlicht.</p>
-            </div>
-          </div>)}
-          {lineupVisible && (<>
+          {/* ===== Tage (Veröffentlichung pro Tag zeitgesteuert) ===== */}
+          {!visibleDays.day1 ? <LockedDayCard dayKey="day1" /> : (
           <DayCard dayKey="day1" icon={<Flag className="w-5 h-5" />} availableCount={availableFor('day1').length}>
             <FormatExplanation rule="Beide Spieler spielen ihren eigenen Ball. Auf jedem Loch zählt das bessere Nettoergebnis des Teams (Schläge minus Vorgabe) – gespielt mit ¾ der Spielvorgabe." />
             <BestballSVG />
             <PairList day="day1" pairs={data.day1.pairs} canEdit={canEdit} canScore={canScore} addPair={addPair} removePair={removePair} updatePair={updatePair} updatePairTime={updatePairTime} setPairHole={setPairHole} PlayerSelect={PlayerSelect} OppInput={OppInput} />
-          </DayCard>
+          </DayCard>)}
 
+          {!visibleDays.day2 ? <LockedDayCard dayKey="day2" /> : (
           <DayCard dayKey="day2" icon={<Target className="w-5 h-5" />} availableCount={availableFor('day2').length}>
             <FormatExplanation rule="Zwei Spieler teilen sich EINEN Ball. Sie schlagen abwechselnd, bis der Ball eingelocht ist. Abschläge wechseln (gerade/ungerade Löcher)." />
             <FoursomesSVG />
             <FormatExplanation rule="Wertung: Nettoergebnis mit ¾ der Spielvorgabe. Bei Aufgabe eines Lochs erhält automatisch das andere Team den Punkt für dieses Loch." note />
             <PairList day="day2" pairs={data.day2.pairs} canEdit={canEdit} canScore={canScore} addPair={addPair} removePair={removePair} updatePair={updatePair} updatePairTime={updatePairTime} setPairHole={setPairHole} PlayerSelect={PlayerSelect} OppInput={OppInput} />
-          </DayCard>
+          </DayCard>)}
 
+          {!visibleDays.day3 ? <LockedDayCard dayKey="day3" /> : (
           <DayCard dayKey="day3" icon={<Swords className="w-5 h-5" />} availableCount={availableFor('day3').length}>
             <FormatExplanation rule="Jeder Spieler tritt im Einzel (2er-Flight) gegen das blaue Team an. Gewertet wird das Nettoergebnis mit ¾ Vorgabe: Wer das Loch netto besser spielt, gewinnt es." />
             <MatchPlaySVG />
@@ -774,8 +772,7 @@ function ReiderCup() {
                 </div>
               ))}
             </div>
-          </DayCard>
-          </>)}
+          </DayCard>)}
 
           <div className="px-5 pb-10 pt-2">
             <p className="text-xs text-center text-stone-400 italic">
@@ -790,7 +787,7 @@ function ReiderCup() {
       {detail && (
         <PlayerDetail
           name={detail} data={data} playerByName={playerByName} fmtName={fmtName} bluePlayers={bluePlayers}
-          canEdit={canEdit} lineupVisible={lineupVisible} onClose={() => setDetail(null)} onEdit={startEdit} onExport={() => exportPlan(detail)} />
+          canEdit={canEdit} visibleDays={visibleDays} onClose={() => setDetail(null)} onEdit={startEdit} onExport={() => exportPlan(detail)} />
       )}
 
       {/* ===== Teilen-Modal ===== */}
@@ -910,6 +907,32 @@ function PairList({ day, pairs, canEdit, canScore, addPair, removePair, updatePa
   );
 }
 
+function LockedDayCard({ dayKey }) {
+  const m = DAY_META[dayKey];
+  const at = REVEAL_AT[dayKey];
+  const wann = at
+    ? `am ${at.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })} um ${at.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`
+    : 'in Kürze';
+  return (
+    <div className="px-5 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-[#0d2240] via-[#102a4c] to-[#0a1a31] text-white px-5 py-4">
+          <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs uppercase tracking-[0.25em] text-[#c8a44d] font-bold">{m.label}</span>
+            <Lock className="w-4 h-4 text-[#c8a44d]" />
+          </div>
+          <h3 className="display text-2xl font-semibold leading-tight">{m.format}</h3>
+          <div className="flex items-center gap-3 text-slate-300 text-sm mt-1"><span>{m.long}</span><span className="text-slate-500">·</span><span>{m.holes}</span></div>
+        </div>
+        <div className="p-6 text-center">
+          <p className="text-sm text-stone-500">🔒 Die Aufstellung wird <b className="text-slate-800">{wann}</b> veröffentlicht.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DayCard({ dayKey, icon, availableCount, children }) {
   const m = DAY_META[dayKey];
   return (
@@ -937,12 +960,14 @@ function FormatExplanation({ rule, note }) {
   return <div className={`border-l-2 pl-3 py-1 text-sm leading-relaxed mb-1 ${note ? 'border-[#c8a44d] text-slate-600 italic' : 'border-red-700 text-slate-700'}`}>{rule}</div>;
 }
 
-function PlayerDetail({ name, data, playerByName, fmtName, canEdit, bluePlayers, lineupVisible, onClose, onEdit, onExport }) {
+function PlayerDetail({ name, data, playerByName, fmtName, canEdit, bluePlayers, visibleDays, onClose, onEdit, onExport }) {
   const p = playerByName(name);
   const isBlue = !p;
   const bp = isBlue ? (bluePlayers || []).find((x) => x.name === name) : null;
   const avail = p ? p.available : (bp ? bp.available : {});
-  const sched = lineupVisible ? (isBlue ? computeScheduleBlue(data, name) : computeSchedule(data, name)) : [];
+  const vd = visibleDays || { day1: true, day2: true, day3: true };
+  const anyHidden = !vd.day1 || !vd.day2 || !vd.day3;
+  const sched = (isBlue ? computeScheduleBlue(data, name) : computeSchedule(data, name)).filter((e) => vd[e.key]);
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
@@ -961,10 +986,8 @@ function PlayerDetail({ name, data, playerByName, fmtName, canEdit, bluePlayers,
         </div>
 
         <div className="p-5 space-y-3">
-          {!lineupVisible ? (
-            <p className="text-sm text-stone-500 italic text-center py-4">🔒 Der Spielplan wird am Freitag, 12. Juni um 12:00 Uhr veröffentlicht.</p>
-          ) : sched.length === 0 ? (
-            <p className="text-sm text-stone-500 italic text-center py-4">Noch keiner Paarung / keinem Match zugeordnet.</p>
+          {sched.length === 0 ? (
+            <p className="text-sm text-stone-500 italic text-center py-4">{anyHidden ? '🔒 Der Spielplan wird mit Veröffentlichung der Aufstellungen sichtbar.' : 'Noch keiner Paarung / keinem Match zugeordnet.'}</p>
           ) : sched.map((e, i) => {
             const m = DAY_META[e.key];
             return (
@@ -990,7 +1013,10 @@ function PlayerDetail({ name, data, playerByName, fmtName, canEdit, bluePlayers,
             );
           })}
 
-          {!isBlue && lineupVisible && (
+          {anyHidden && sched.length > 0 && (
+            <p className="text-[11px] text-stone-400 text-center">🔒 Noch nicht veröffentlichte Spieltage sind ausgeblendet.</p>
+          )}
+          {!isBlue && sched.length > 0 && (
           <div className="flex gap-2 pt-1">
             <button onClick={onExport} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#c8a44d] hover:bg-[#b8923c] text-[#3a2a08] rounded-xl text-sm font-bold transition">
               <Printer className="w-4 h-4" /> Einzelplan
@@ -1237,7 +1263,7 @@ function StrategyCompare({ data, canEdit, onApply, onClose }) {
 }
 
 /* ---------- Export ---------- */
-function generatePlanHTML(data, focus, showHcp) {
+function generatePlanHTML(data, focus, showHcp, visDays) {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmtPlayer = (name) => { if (!name) return '—'; const p = data.roster.find((x) => x.name === name); if (!p) return esc(name); return showHcp && p.hcp != null ? `${esc(name)} <span class="meta">(HCP ${p.hcp})</span>` : esc(name); };
   const today = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -1275,10 +1301,12 @@ function generatePlanHTML(data, focus, showHcp) {
 <div class="actions"><p>Tipp: Über den Button drucken oder als PDF speichern.</p><button onclick="window.print()">Drucken / Als PDF</button></div>`;
   const FOOT = `<footer>(R)Eider Cup 2026 · Nordsee-Golfclub St. Peter-Ording · erstellt am ${today}</footer></body></html>`;
 
+  const vis = visDays || { day1: true, day2: true, day3: true };
   if (focus) {
     const sched = computeSchedule(data, focus);
     const p = data.roster.find((x) => x.name === focus);
     const rows = ['day1','day2','day3'].map((k) => {
+      if (!vis[k]) return '';
       const e = sched.find((x) => x.key === k);
       if (!e) return '';
       return `<tr><td class="num">${META[k].l}</td><td>${META[k].f}</td><td class="time">${esc(e.time) || '—'}</td><td>${k !== 'day3' ? fmtPlayer(e.partner) : '<span class="meta">Einzel</span>'}</td><td>${e.opp.length ? e.opp.map(esc).join(' &amp; ') : '—'}</td></tr>`;
@@ -1295,7 +1323,7 @@ function generatePlanHTML(data, focus, showHcp) {
 
   return HEAD + `<div class="header"><div class="subtitle">Nordsee-Golfclub · St. Peter-Ording</div><h1>(R)Eider <em>Cup</em> 2026</h1><div class="info">12.–14. Juni · Gesamtplan · Rotes Team</div></div>
 <div class="course-info"><strong>Spielort:</strong> Nordsee-Golfclub St. Peter-Ording (9-Loch-Links, Par 72 bei 18-Loch-Spiel)<br><strong>Wertung:</strong> Nettoergebnis mit ¾ der Spielvorgabe<br><strong>Par-3-Löcher (18-Loch):</strong> 2 (157m), 9 (138m), 11 (157m), 18 (138m)<br><strong>Schwerste Bahnen:</strong> Loch 6 (HCP 1, 443m Par 5), Loch 8 (HCP 5, 444m Par 5)</div>
-${dayTable('day1', pairRows(data.day1.pairs))}${dayTable('day2', pairRows(data.day2.pairs))}${dayTable('day3', matchRows)}` + FOOT;
+${vis.day1 ? dayTable('day1', pairRows(data.day1.pairs)) : ''}${vis.day2 ? dayTable('day2', pairRows(data.day2.pairs)) : ''}${vis.day3 ? dayTable('day3', matchRows) : ''}` + FOOT;
 }
 
 /* ---------- Illustrationen ---------- */
