@@ -24,6 +24,12 @@
   .display { font-family: 'Fraunces', Georgia, serif; font-optical-sizing: auto; }
   body { margin: 0; background: #f4f1ea; }
   .gold-rule { background: linear-gradient(90deg, transparent, #c8a44d, transparent); }
+  /* Dezente Tiefe */
+  .card-depth { background: linear-gradient(180deg, #ffffff, #faf8f2); box-shadow: 0 1px 2px rgba(13,34,64,0.06), 0 10px 26px -12px rgba(13,34,64,0.30); }
+  .head-depth { box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -10px 22px -14px rgba(0,0,0,0.55); }
+  .num-depth { text-shadow: 0 2px 5px rgba(0,0,0,0.14), 0 1px 0 rgba(255,255,255,0.55); }
+  .bar-depth { box-shadow: inset 0 2px 4px rgba(0,0,0,0.22); }
+  .bar-fill { box-shadow: inset 0 1px 0 rgba(255,255,255,0.28); }
   input[type="time"] { font-family: 'DM Sans', sans-serif; }
   /* iOS: Felder >= 16px verhindern das Auto-Zoom beim Antippen */
   @media (max-width: 640px) {
@@ -613,7 +619,7 @@ function ReiderCup() {
 
           {/* ===== Spieler-Finder ===== */}
           <div className="px-5 mb-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 p-5">
+            <div className="card-depth rounded-2xl border border-stone-200/60 p-5">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-red-700" />
@@ -927,8 +933,8 @@ function LockedDayCard({ dayKey }) {
     : 'in Kürze';
   return (
     <div className="px-5 mb-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 overflow-hidden">
-        <div className="relative bg-gradient-to-br from-[#0d2240] via-[#102a4c] to-[#0a1a31] text-white px-5 py-4">
+      <div className="card-depth rounded-2xl border border-stone-200/60 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-[#0d2240] via-[#102a4c] to-[#0a1a31] text-white px-5 py-4 head-depth">
           <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs uppercase tracking-[0.25em] text-[#c8a44d] font-bold">{m.label}</span>
@@ -951,10 +957,10 @@ function DayCard({ dayKey, icon, availableCount, children, defaultOpen }) {
   const toggle = () => setOpen((o) => !o);
   return (
     <div className="px-5 mb-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 overflow-hidden">
+      <div className="card-depth rounded-2xl border border-stone-200/60 overflow-hidden">
         <div role="button" tabIndex={0} aria-expanded={open} onClick={toggle}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } }}
-          className="relative bg-gradient-to-br from-[#0d2240] via-[#102a4c] to-[#0a1a31] text-white px-5 py-4 cursor-pointer hover:brightness-110 transition select-none">
+          className="relative bg-gradient-to-br from-[#0d2240] via-[#102a4c] to-[#0a1a31] text-white px-5 py-4 head-depth cursor-pointer hover:brightness-110 transition select-none">
           <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs uppercase tracking-[0.25em] text-[#c8a44d] font-bold">{m.label}</span>
@@ -1152,21 +1158,21 @@ function ScoreBoard({ data }) {
   const oppPct = s.total ? (s.opp / s.total) * 100 : 50;
   return (
     <div className="px-5 -mt-5 mb-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 overflow-hidden">
-        <div className="relative bg-gradient-to-br from-[#0d2240] to-[#0a1a31] text-white px-5 py-3 flex items-center justify-between">
+      <div className="card-depth rounded-2xl border border-stone-200/60 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-[#0d2240] to-[#0a1a31] text-white px-5 py-3 head-depth flex items-center justify-between">
           <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
           <div className="flex items-center gap-2"><Trophy className="w-4 h-4 text-[#c8a44d]" /><span className="text-xs uppercase tracking-[0.2em] font-bold text-[#c8a44d]">Punktestand</span></div>
           <span className="text-[11px] text-slate-300">{s.decided}/{s.total} entschieden · {fmtPts(Math.floor(s.total / 2) + 1)} zum Sieg</span>
         </div>
         <div className="p-5">
           <div className="flex items-end justify-between mb-3">
-            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-red-700 font-bold mb-0.5">Rotes Team</div><div className={`display font-bold leading-none transition-all duration-500 ${s.red > s.opp ? 'text-6xl text-red-700' : s.red < s.opp ? 'text-5xl text-red-800/55' : 'text-5xl text-red-800'}`}>{fmtPts(s.red)}</div></div>
+            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-red-700 font-bold mb-0.5">Rotes Team</div><div className={`display font-bold leading-none num-depth transition-all duration-500 ${s.red > s.opp ? 'text-6xl text-red-700' : s.red < s.opp ? 'text-5xl text-red-800/55' : 'text-5xl text-red-800'}`}>{fmtPts(s.red)}</div></div>
             <div className="text-stone-300 text-2xl font-light px-3 pb-1">:</div>
-            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-blue-700 font-bold mb-0.5">Blaues Team</div><div className={`display font-bold leading-none transition-all duration-500 ${s.opp > s.red ? 'text-6xl text-blue-700' : s.opp < s.red ? 'text-5xl text-blue-800/55' : 'text-5xl text-blue-800'}`}>{fmtPts(s.opp)}</div></div>
+            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-blue-700 font-bold mb-0.5">Blaues Team</div><div className={`display font-bold leading-none num-depth transition-all duration-500 ${s.opp > s.red ? 'text-6xl text-blue-700' : s.opp < s.red ? 'text-5xl text-blue-800/55' : 'text-5xl text-blue-800'}`}>{fmtPts(s.opp)}</div></div>
           </div>
-          <div className="h-2.5 rounded-full overflow-hidden bg-slate-200 flex">
-            <div className="bg-red-700 h-full transition-all duration-500" style={{ width: redPct + '%' }} />
-            <div className="bg-blue-600 h-full transition-all duration-500" style={{ width: oppPct + '%' }} />
+          <div className="h-2.5 rounded-full overflow-hidden bg-slate-200 flex bar-depth">
+            <div className="bg-red-700 h-full transition-all duration-500 bar-fill" style={{ width: redPct + '%' }} />
+            <div className="bg-blue-600 h-full transition-all duration-500 bar-fill" style={{ width: oppPct + '%' }} />
           </div>
           {s.decided === 0 && <p className="text-[11px] text-center text-stone-400 italic mt-3">Noch keine Ergebnisse eingetragen</p>}
         </div>
@@ -1184,7 +1190,7 @@ function InfoCard({ info, canEdit, updateInfo }) {
   const mapsUrl = info.maps || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(info.address || 'Nordsee-Golfclub St. Peter-Ording'));
   return (
     <div className="px-5 mb-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 overflow-hidden">
+      <div className="card-depth rounded-2xl border border-stone-200/60 overflow-hidden">
         <div className="relative bg-gradient-to-r from-emerald-800 to-emerald-900 text-white px-5 py-3 flex items-center gap-2">
           <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
           <Calendar className="w-4 h-4 text-[#e9cf8f]" />
