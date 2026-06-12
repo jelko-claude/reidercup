@@ -945,24 +945,29 @@ function LockedDayCard({ dayKey }) {
   );
 }
 
-function DayCard({ dayKey, icon, availableCount, children }) {
+function DayCard({ dayKey, icon, availableCount, children, defaultOpen }) {
   const m = DAY_META[dayKey];
+  const [open, setOpen] = useState(!!defaultOpen);
+  const toggle = () => setOpen((o) => !o);
   return (
     <div className="px-5 mb-6">
       <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 overflow-hidden">
-        <div className="relative bg-gradient-to-br from-[#0d2240] via-[#102a4c] to-[#0a1a31] text-white px-5 py-4">
+        <div role="button" tabIndex={0} aria-expanded={open} onClick={toggle}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } }}
+          className="relative bg-gradient-to-br from-[#0d2240] via-[#102a4c] to-[#0a1a31] text-white px-5 py-4 cursor-pointer hover:brightness-110 transition select-none">
           <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs uppercase tracking-[0.25em] text-[#c8a44d] font-bold">{m.label}</span>
             <div className="flex items-center gap-2">
               {availableCount !== undefined && <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-emerald-900/40 px-2 py-0.5 rounded">{availableCount} verf.</span>}
               <div className="text-[#c8a44d]">{icon}</div>
+              <ChevDown className={`w-5 h-5 text-[#c8a44d] transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
             </div>
           </div>
           <h3 className="display text-2xl font-semibold leading-tight">{m.format}</h3>
-          <div className="flex items-center gap-2 text-slate-300 text-sm mt-1 flex-wrap"><span>{m.long}</span><span className="text-slate-500">·</span><span>{m.holes}</span><span className="text-slate-500">·</span><span className="text-[#e9cf8f] font-semibold">Start {m.start}</span></div>
+          <div className="flex items-center gap-2 text-slate-300 text-sm mt-1 flex-wrap"><span>{m.long}</span><span className="text-slate-500">·</span><span>{m.holes}</span><span className="text-slate-500">·</span><span className="text-[#e9cf8f] font-semibold">Start {m.start}</span>{!open && <span className="text-[#c8a44d]/80 text-xs ml-1">· tippen zum Öffnen</span>}</div>
         </div>
-        <div className="p-5">{children}</div>
+        {open && <div className="p-5">{children}</div>}
       </div>
     </div>
   );
