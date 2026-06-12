@@ -1043,7 +1043,7 @@ function ScoreBoard({ data }) {
         <div className="relative bg-gradient-to-br from-[#0d2240] to-[#0a1a31] text-white px-5 py-3 flex items-center justify-between">
           <div className="absolute top-0 left-0 right-0 h-0.5 gold-rule" />
           <div className="flex items-center gap-2"><Trophy className="w-4 h-4 text-[#c8a44d]" /><span className="text-xs uppercase tracking-[0.2em] font-bold text-[#c8a44d]">Punktestand</span></div>
-          <span className="text-[11px] text-slate-300">{s.decided}/{s.total} entschieden · {fmtPts(s.total / 2)} zum Sieg</span>
+          <span className="text-[11px] text-slate-300">{s.decided}/{s.total} entschieden · {fmtPts(Math.floor(s.total / 2) + 1)} zum Sieg</span>
         </div>
         <div className="p-5">
           <div className="flex items-end justify-between mb-3">
