@@ -79,6 +79,8 @@ const REVEAL_AT = {
   day2: new Date('2026-06-12T16:00:00'), // Samstag-Aufstellung live ab Fr 16:00
   day3: new Date('2026-06-13T13:00:00'), // Sonntag-Aufstellung live ab Sa 13:00
 };
+// Nach dem Turnier: Seite wird zur Abschluss-/Siegerseite (Admin via #admin sieht weiter alles)
+const ARCHIVE_AT = new Date('2026-06-17T12:00:00');
 
 /* ---------- Daten ---------- */
 const DAY_META = {
@@ -136,7 +138,7 @@ const defaultData = {
   ] },
 };
 
-const IMPORT_DATA = {"roster": [{"name": "Werner Bast", "hcp": 50.1, "available": {"day1": true, "day2": false, "day3": false}}, {"name": "Michael Behr", "hcp": 33.5, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Naomi Behr", "hcp": 47.2, "available": {"day1": false, "day2": false, "day3": true}}, {"name": "Wolfgang Belz", "hcp": 26.6, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Emanuel Bertling", "hcp": 23.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Claus Carstens", "hcp": 26.5, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Peter Freudenthal", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Michael Goltz", "hcp": 22.5, "available": {"day1": false, "day2": true, "day3": true}}, {"name": "Falk Howe", "hcp": 11.0, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Linus Howe", "hcp": 3.8, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Jelko Hubert", "hcp": 18.1, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "John Herrmann Cordes", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Hans-Peter Jönnsson", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Ilona Jönnsson", "hcp": 33.0, "available": {"day1": false, "day2": true, "day3": true}}, {"name": "Kai May", "hcp": 17.0, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Frauke Mehret", "hcp": 16.9, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Thomas Mehret", "hcp": 15.7, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Theo Menck", "hcp": 15.3, "available": {"day1": true, "day2": false, "day3": false}}, {"name": "Norbert Reiter", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Uwe Schmidt", "hcp": 26.5, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Jürgen Speetzen", "hcp": 38.1, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Dirk Stoffer", "hcp": 30.4, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Eugen Uhlmann", "hcp": 26.1, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Klaus-Jürgen Winter", "hcp": 31.5, "available": {"day1": true, "day2": false, "day3": false}}, {"name": "Hauke Witthohn", "hcp": 17.1, "available": {"day1": true, "day2": true, "day3": true}}], "day1": {"pairs": [{"own": ["Jelko Hubert", "Werner Bast"], "opp": ["Stefan Flor", "Kurt Kahlke"], "time": "14:30"}, {"own": ["Jürgen Speetzen", "Wolfgang Belz"], "opp": ["Gabriele Uhlmann", "Andrea Koch"], "time": "14:40"}, {"own": ["Hans-Peter Jönnsson", "Michael Behr"], "opp": ["Vincent Willmann", "Bernd Iden"], "time": "14:50"}, {"own": ["Dirk Stoffer", "Norbert Reiter"], "opp": ["Ursula Prien", "Birgit Kahlke"], "time": "15:00"}, {"own": ["Uwe Schmidt", "Klaus-Jürgen Winter"], "opp": ["Anke Matthies", "Karin Lamottke"], "time": "15:10"}, {"own": ["Peter Freudenthal", "John Herrmann Cordes"], "opp": ["Henner Mahlstedt", "Joachim Eichstedt"], "time": "15:20"}, {"own": ["Emanuel Bertling", "Eugen Uhlmann"], "opp": ["Sabine Mahlstedt", "Meike Vanhooren"], "time": "15:30"}, {"own": ["Theo Menck", "Claus Carstens"], "opp": ["Maren Schwere", "Max Stammerjohann"], "time": "15:40"}, {"own": ["Kai May", "Hauke Witthohn"], "opp": ["Hartmut Günther", "Günter Klugmann"], "time": "15:50"}]}, "day2": {"pairs": [{"own": ["Linus Howe", "Falk Howe"], "opp": ["Stefan Flor", "Kurt Kahlke"], "time": "11:00"}, {"own": ["Frauke Mehret", "Thomas Mehret"], "opp": ["Vincent Willmann", "Birgit Kahlke"], "time": "11:10"}, {"own": ["Kai May", "Hauke Witthohn"], "opp": ["Anke Matthies", "Karin Lamottke"], "time": "11:20"}, {"own": ["Emanuel Bertling", "Eugen Uhlmann"], "opp": ["Gabriele Uhlmann", "Andrea Koch"], "time": "11:30"}, {"own": ["Jelko Hubert", "Ilona Jönnsson"], "opp": ["Maren Schwere", "Max Stammerjohann"], "time": "11:40"}, {"own": ["Michael Goltz", "Hans-Peter Jönnsson"], "opp": ["Sabine Mahlstedt", "Meike Vanhooren"], "time": "11:50"}, {"own": ["Peter Freudenthal", "John Herrmann Cordes"], "opp": ["Joachim Eichstedt", "Henner Mahlstedt"], "time": "12:00"}, {"own": ["Dirk Stoffer", "Norbert Reiter"], "opp": ["Charly Petersen", "Anna Wendt"], "time": "12:10"}]}, "day3": {"matches": [{"own": "Claus Carstens", "opp": "Gabriele Uhlmann", "time": "12:00"}, {"own": "Peter Freudenthal", "opp": "Susanne Klugmann", "time": "12:08"}, {"own": "John Herrmann Cordes", "opp": "Vincent Willmann", "time": "12:16"}, {"own": "Hans-Peter Jönnsson", "opp": "Joachim Eichstedt", "time": "12:24"}, {"own": "Norbert Reiter", "opp": "Maren Schwere", "time": "12:32"}, {"own": "Uwe Schmidt", "opp": "Stefan Flor", "time": "12:40"}, {"own": "Wolfgang Belz", "opp": "Kurt Kahlke", "time": "12:48"}, {"own": "Dirk Stoffer", "opp": "Birgit Kahlke", "time": "12:56"}, {"own": "Ilona Jönnsson", "opp": "Charly Petersen", "time": "13:04"}, {"own": "Michael Behr", "opp": "Hartmut Günther", "time": "13:12"}, {"own": "Jürgen Speetzen", "opp": "Monika Günther", "time": "13:20"}, {"own": "Naomi Behr", "opp": "Max Stammerjohann", "time": "13:28"}, {"own": "Eugen Uhlmann", "opp": "Karin Lamottke", "time": "13:36"}, {"own": "Emanuel Bertling", "opp": "Anke Matthies", "time": "13:44"}, {"own": "Michael Goltz", "opp": "Henner Mahlstedt", "time": "13:52"}, {"own": "Jelko Hubert", "opp": "Sabine Mahlstedt", "time": "14:00"}, {"own": "Hauke Witthohn", "opp": "Bernd Iden", "time": "14:08"}, {"own": "Kai May", "opp": "Alke Menze", "time": "14:16"}]}, "strategy": "midhighlow", "strategyDay1": "weakfirst", "strategyDay2": "strongfirst"};
+const IMPORT_DATA = {"roster": [{"name": "Werner Bast", "hcp": 50.1, "available": {"day1": true, "day2": false, "day3": false}}, {"name": "Michael Behr", "hcp": 33.5, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Naomi Behr", "hcp": 47.2, "available": {"day1": false, "day2": false, "day3": true}}, {"name": "Wolfgang Belz", "hcp": 26.6, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Emanuel Bertling", "hcp": 23.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Claus Carstens", "hcp": 26.5, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Peter Freudenthal", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Michael Goltz", "hcp": 22.5, "available": {"day1": false, "day2": true, "day3": true}}, {"name": "Falk Howe", "hcp": 11.0, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Linus Howe", "hcp": 3.8, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Jelko Hubert", "hcp": 18.1, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "John Herrmann Cordes", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Hans-Peter Jönnsson", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Ilona Jönnsson", "hcp": 33.0, "available": {"day1": false, "day2": true, "day3": true}}, {"name": "Kai May", "hcp": 17.0, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Frauke Mehret", "hcp": 16.9, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Thomas Mehret", "hcp": 15.7, "available": {"day1": false, "day2": true, "day3": false}}, {"name": "Theo Menck", "hcp": 15.3, "available": {"day1": true, "day2": false, "day3": false}}, {"name": "Norbert Reiter", "hcp": 26.5, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Uwe Schmidt", "hcp": 26.5, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Jürgen Speetzen", "hcp": 38.1, "available": {"day1": true, "day2": false, "day3": true}}, {"name": "Dirk Stoffer", "hcp": 30.4, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Eugen Uhlmann", "hcp": 26.1, "available": {"day1": true, "day2": true, "day3": true}}, {"name": "Klaus-Jürgen Winter", "hcp": 31.5, "available": {"day1": true, "day2": false, "day3": false}}, {"name": "Hauke Witthohn", "hcp": 17.1, "available": {"day1": true, "day2": true, "day3": true}}], "day1": {"pairs": [{"own": ["Jelko Hubert", "Werner Bast"], "opp": ["Stefan Flor", "Kurt Kahlke"], "time": "14:30"}, {"own": ["Jürgen Speetzen", "Wolfgang Belz"], "opp": ["Gabriele Uhlmann", "Andrea Koch"], "time": "14:40"}, {"own": ["Hans-Peter Jönnsson", "Michael Behr"], "opp": ["Vincent Willmann", "Bernd Iden"], "time": "14:50"}, {"own": ["Dirk Stoffer", "Norbert Reiter"], "opp": ["Ursula Prien", "Birgit Kahlke"], "time": "15:00"}, {"own": ["Uwe Schmidt", "Klaus-Jürgen Winter"], "opp": ["Anke Matthies", "Karin Lamottke"], "time": "15:10"}, {"own": ["Peter Freudenthal", "John Herrmann Cordes"], "opp": ["Henner Mahlstedt", "Joachim Eichstedt"], "time": "15:20"}, {"own": ["Emanuel Bertling", "Eugen Uhlmann"], "opp": ["Sabine Mahlstedt", "Meike Vanhooren"], "time": "15:30"}, {"own": ["Theo Menck", "Claus Carstens"], "opp": ["Maren Schwere", "Max Stammerjohann"], "time": "15:40"}, {"own": ["Kai May", "Hauke Witthohn"], "opp": ["Hartmut Günther", "Günter Klugmann"], "time": "15:50"}]}, "day2": {"pairs": [{"own": ["Linus Howe", "Falk Howe"], "opp": ["Stefan Flor", "Kurt Kahlke"], "time": "11:00"}, {"own": ["Frauke Mehret", "Thomas Mehret"], "opp": ["Vincent Willmann", "Birgit Kahlke"], "time": "11:10"}, {"own": ["Kai May", "Hauke Witthohn"], "opp": ["Anke Matthies", "Karin Lamottke"], "time": "11:20"}, {"own": ["Emanuel Bertling", "Eugen Uhlmann"], "opp": ["Gabriele Uhlmann", "Andrea Koch"], "time": "11:30"}, {"own": ["Jelko Hubert", "Ilona Jönnsson"], "opp": ["Maren Schwere", "Max Stammerjohann"], "time": "11:40"}, {"own": ["Michael Goltz", "Hans-Peter Jönnsson"], "opp": ["Sabine Mahlstedt", "Meike Vanhooren"], "time": "11:50"}, {"own": ["Peter Freudenthal", "John Herrmann Cordes"], "opp": ["Joachim Eichstedt", "Henner Mahlstedt"], "time": "12:00"}, {"own": ["Dirk Stoffer", "Norbert Reiter"], "opp": ["Charly Petersen", "Anna Wendt"], "time": "12:10"}]}, "day3": {"matches": [{"own": "Claus Carstens", "opp": "Gabriele Uhlmann", "time": "12:00"}, {"own": "Peter Freudenthal", "opp": "Susanne Klugmann", "time": "12:08"}, {"own": "John Herrmann Cordes", "opp": "Vincent Willmann", "time": "12:16"}, {"own": "Hans-Peter Jönnsson", "opp": "Ursula Prien", "time": "12:24"}, {"own": "Norbert Reiter", "opp": "Maren Schwere", "time": "12:32"}, {"own": "Uwe Schmidt", "opp": "Stefan Flor", "time": "12:40"}, {"own": "Wolfgang Belz", "opp": "Kurt Kahlke", "time": "12:48"}, {"own": "Dirk Stoffer", "opp": "Birgit Kahlke", "time": "12:56"}, {"own": "Ilona Jönnsson", "opp": "Charly Petersen", "time": "13:04"}, {"own": "Michael Behr", "opp": "Hartmut Günther", "time": "13:12"}, {"own": "Jürgen Speetzen", "opp": "Monika Günther", "time": "13:20"}, {"own": "Naomi Behr", "opp": "Max Stammerjohann", "time": "13:28"}, {"own": "Eugen Uhlmann", "opp": "Karin Lamottke", "time": "13:36"}, {"own": "Emanuel Bertling", "opp": "Anke Matthies", "time": "13:44"}, {"own": "Michael Goltz", "opp": "Henner Mahlstedt", "time": "13:52"}, {"own": "Jelko Hubert", "opp": "Sabine Mahlstedt", "time": "14:00"}, {"own": "Hauke Witthohn", "opp": "Bernd Iden", "time": "14:08"}, {"own": "Kai May", "opp": "Alke Menze", "time": "14:16"}]}, "strategy": "midhighlow", "strategyDay1": "weakfirst", "strategyDay2": "strongfirst"};
 
 function normalize(d) {
   const data = { ...defaultData, ...(d || {}) };
@@ -537,6 +539,9 @@ function ReiderCup() {
     <span className={`inline-flex items-center justify-center text-[10px] font-bold rounded px-1.5 py-0.5 ${active ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-400 line-through'}`}>{label}</span>
   );
 
+  // Nach Turnier-Ende: würdevolle Abschluss-Seite (Admin via #admin sieht weiterhin alles)
+  if (nowR >= ARCHIVE_AT.getTime() && !canEdit) return <ClosingPage data={data} />;
+
   return (
     <>
       <div className="print:hidden min-h-screen" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
@@ -591,6 +596,9 @@ function ReiderCup() {
               </div>
             </div>
           )}
+
+          {/* ===== Sieger-Banner (automatisch ab 18 Punkten) ===== */}
+          <WinnerBanner data={data} scoreOnly={scoreOnly} />
 
           {/* ===== Punktestand ===== */}
           <ScoreBoard data={data} />
@@ -842,7 +850,7 @@ function HoleTracker({ holeResults, holesN, canEdit, onSet }) {
     <div className="mt-2 pt-2 border-t border-slate-200/70">
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Loch für Loch</span>
-        {o.label && <span className={`text-[11px] font-bold ${o.decided ? (o.point === 'red' ? 'text-red-700' : o.point === 'opp' ? 'text-blue-700' : 'text-amber-600') : 'text-slate-600'}`}>{o.label}</span>}
+        {o.label && <span className={`text-[11px] font-bold ${o.decided ? (o.point === 'red' ? 'text-red-700' : o.point === 'opp' ? 'text-blue-700' : 'text-amber-600') : 'text-slate-600'}`}>{o.decided ? '🏁 ' : ''}{o.label}</span>}
       </div>
       <div className="grid grid-cols-9 gap-1">
         {Array.from({ length: holesN }).map((_, i) => {
@@ -1033,6 +1041,106 @@ function PlayerDetail({ name, data, playerByName, fmtName, canEdit, bluePlayers,
   );
 }
 
+function cupVerdict(data) {
+  const s = computeScore(data);
+  const need = Math.floor(s.total / 2) + 1;
+  const allDone = s.total > 0 && s.decided === s.total;
+  const redWin = s.red >= need, blueWin = s.opp >= need;
+  const draw = allDone && s.red === s.opp;
+  return { s, need, allDone, redWin, blueWin, draw, over: redWin || blueWin || draw };
+}
+
+function generateResultsHTML(data) {
+  const esc = (x) => String(x ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const v = cupVerdict(data);
+  const res = (item, holes) => {
+    const o = matchOutcome(item.holeResults, holes);
+    if (o.decided) return o.point === 'red' ? `<b style="color:#b91c1c">${esc(o.label)}</b>` : o.point === 'opp' ? `<b style="color:#1d4ed8">${esc(o.label)}</b>` : `<b style="color:#b45309">Geteilt</b>`;
+    const r = item.result;
+    if (r === 'red') return '<b style="color:#b91c1c">Rot gewonnen</b>';
+    if (r === 'opp') return '<b style="color:#1d4ed8">Blau gewonnen</b>';
+    if (r === 'half') return '<b style="color:#b45309">Geteilt</b>';
+    return '<span style="color:#999">—</span>';
+  };
+  const sec = (title, rows) => `<h2>${title}</h2><table><thead><tr><th>Start</th><th>Rotes Team</th><th></th><th>Blaues Team</th><th>Ergebnis</th></tr></thead><tbody>${rows}</tbody></table>`;
+  const pr = (pairs, holes) => pairs.map((p) => `<tr><td>${esc(p.time) || '—'}</td><td>${(p.own || []).filter(Boolean).map(esc).join('<br>')}</td><td class="vs">vs.</td><td>${(p.opp || []).filter(Boolean).map(esc).join('<br>')}</td><td>${res(p, holes)}</td></tr>`).join('');
+  const mr = (data.day3.matches || []).map((m) => `<tr><td>${esc(m.time) || '—'}</td><td>${esc(m.own)}</td><td class="vs">vs.</td><td>${esc(m.opp) || '—'}</td><td>${res(m, 9)}</td></tr>`).join('');
+  const headline = v.draw ? 'Unentschieden' : v.redWin ? 'Das Rote Team gewinnt!' : v.blueWin ? 'Das Blaue Team gewinnt!' : 'Zwischenstand';
+  return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>(R)Eider Cup 2026 – Endstand</title><style>
+  body{font-family:Georgia,serif;max-width:780px;margin:0 auto;padding:34px 28px;color:#1a1a1a}
+  .top{text-align:center;border-bottom:3px double #7f1d1d;padding-bottom:16px;margin-bottom:8px}
+  .top h1{font-size:30px;margin:0;color:#7f1d1d} .top .win{font-size:19px;margin:10px 0 2px;color:#0d2240;font-weight:bold}
+  .top .score{font-size:44px;font-weight:bold;margin:6px 0;color:#0d2240}
+  h2{font-size:15px;text-transform:uppercase;letter-spacing:2px;color:#7f1d1d;border-bottom:1px solid #ddd;padding-bottom:4px;margin:26px 0 8px}
+  table{width:100%;border-collapse:collapse;font-size:13px} th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;padding:4px 6px}
+  td{padding:5px 6px;border-top:1px solid #eee;vertical-align:top} td.vs{color:#aaa;font-style:italic;width:24px}
+  footer{margin-top:30px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#888;text-align:center}
+  .actions{text-align:center;margin-bottom:14px} .actions button{background:#7f1d1d;color:#fff;border:0;padding:9px 22px;border-radius:7px;font-size:14px;cursor:pointer}
+  @media print{@page{size:A4;margin:14mm} .actions{display:none}}
+  </style></head><body>
+  <div class="actions"><button onclick="window.print()">Drucken / Als PDF</button></div>
+  <div class="top"><h1>🏆 (R)Eider Cup 2026 – Endstand</h1><div class="win">${headline}</div><div class="score">${fmtPts(v.s.red)} : ${fmtPts(v.s.opp)}</div><div style="font-size:12px;color:#666">Rotes Team : Blaues Team · ${v.s.decided}/${v.s.total} Begegnungen gewertet</div></div>
+  ${sec('Freitag · Bestball · 9 Loch', pr(data.day1.pairs || [], 9))}
+  ${sec('Samstag · Klassischer Vierer · 18 Loch', pr(data.day2.pairs || [], 18))}
+  ${sec('Sonntag · Einzel · 9 Loch', mr)}
+  <footer>(R)Eider Cup 2026 · Nordsee-Golfclub St. Peter-Ording</footer></body></html>`;
+}
+
+function WinnerBanner({ data, scoreOnly }) {
+  const v = cupVerdict(data);
+  if (!v.over) return null;
+  const exportResults = () => {
+    const blob = new Blob([generateResultsHTML(data)], { type: 'text/html' });
+    const w = window.open(URL.createObjectURL(blob), '_blank');
+    if (!w) alert('Bitte Pop-ups erlauben.');
+  };
+  return (
+    <div className="px-5 -mt-5 mb-8 relative z-10">
+      <div className={`rounded-2xl shadow-lg overflow-hidden border-2 border-[#c8a44d] text-white ${v.draw ? 'bg-gradient-to-br from-[#0d2240] to-[#0a1a31]' : v.redWin ? 'bg-gradient-to-br from-red-800 to-red-950' : 'bg-gradient-to-br from-blue-800 to-blue-950'}`}>
+        <div className="h-1 gold-rule" />
+        <div className="px-5 py-5 text-center">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-[#e9cf8f] font-bold mb-1.5">{v.allDone ? 'Endstand' : 'Vorzeitig entschieden'}</div>
+          <div className="display text-2xl sm:text-3xl font-bold leading-tight">
+            {v.draw ? 'Der (R)Eider Cup 2026 endet unentschieden' : <>🏆 Das {v.redWin ? 'Rote' : 'Blaue'} Team gewinnt den (R)Eider Cup 2026!</>}
+          </div>
+          <div className="mt-2 text-sm text-white/85">
+            {v.allDone ? <>Endstand <b className="text-[#e9cf8f]">{fmtPts(v.s.red)} : {fmtPts(v.s.opp)}</b></> : <>Stand {fmtPts(v.s.red)} : {fmtPts(v.s.opp)} · die letzten Matches laufen noch</>}
+          </div>
+          {v.allDone && !scoreOnly && (
+            <button onClick={exportResults} className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-[#c8a44d] hover:bg-[#b8923c] text-[#3a2a08] rounded-lg text-xs font-bold shadow transition">
+              <Printer className="w-3.5 h-3.5" /> Endstand exportieren
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClosingPage({ data }) {
+  const v = cupVerdict(data);
+  const winLine = v.draw ? 'Unentschieden · ' + fmtPts(v.s.red) + ' : ' + fmtPts(v.s.opp)
+    : v.redWin ? 'Sieger: Rotes Team · ' + fmtPts(v.s.red) + ' : ' + fmtPts(v.s.opp)
+    : v.blueWin ? 'Sieger: Blaues Team · ' + fmtPts(v.s.red) + ' : ' + fmtPts(v.s.opp)
+    : 'Danke für ein großartiges Turnier';
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 bg-gradient-to-br from-red-900 via-[#5c1212] to-[#3a0c0c] text-white" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="fixed top-0 left-0 right-0 h-1 gold-rule" />
+      <div className="text-5xl mb-6">🏆</div>
+      <div className="text-[11px] uppercase tracking-[0.35em] text-[#e9cf8f] font-bold mb-3">Nordsee-Golfclub · St. Peter-Ording</div>
+      <h1 className="display text-5xl sm:text-6xl font-bold leading-none mb-6">(R)Eider <span className="italic font-medium">Cup</span> <span className="text-[#e9cf8f]">2026</span></h1>
+      <div className="inline-block border-y-2 border-[#c8a44d]/60 py-3 px-6 mb-8">
+        <div className="display text-xl sm:text-2xl font-semibold text-[#e9cf8f]">{winLine}</div>
+      </div>
+      <p className="text-lg text-white/85" style={{ fontFamily: "'Fraunces', Georgia, serif", fontStyle: 'italic' }}>Wir sehen uns 2027.</p>
+      <div className="mt-12 flex items-baseline gap-1.5 opacity-80">
+        <span className="text-[9px] uppercase tracking-[0.5px] text-[#e9cf8f]/70">© created by</span>
+        <span className="text-[#e9cf8f]" style={{ fontFamily: "'Great Vibes', cursive", fontSize: '15px' }}>foxy</span>
+      </div>
+    </div>
+  );
+}
+
 function ScoreBoard({ data }) {
   const s = computeScore(data);
   const redPct = s.total ? (s.red / s.total) * 100 : 50;
@@ -1047,9 +1155,9 @@ function ScoreBoard({ data }) {
         </div>
         <div className="p-5">
           <div className="flex items-end justify-between mb-3">
-            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-red-700 font-bold mb-0.5">Rotes Team</div><div className="display text-5xl font-bold text-red-800 leading-none">{fmtPts(s.red)}</div></div>
+            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-red-700 font-bold mb-0.5">Rotes Team</div><div className={`display font-bold leading-none transition-all duration-500 ${s.red > s.opp ? 'text-6xl text-red-700' : s.red < s.opp ? 'text-5xl text-red-800/55' : 'text-5xl text-red-800'}`}>{fmtPts(s.red)}</div></div>
             <div className="text-stone-300 text-2xl font-light px-3 pb-1">:</div>
-            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-blue-700 font-bold mb-0.5">Blaues Team</div><div className="display text-5xl font-bold text-blue-800 leading-none">{fmtPts(s.opp)}</div></div>
+            <div className="text-center flex-1"><div className="text-[11px] uppercase tracking-wide text-blue-700 font-bold mb-0.5">Blaues Team</div><div className={`display font-bold leading-none transition-all duration-500 ${s.opp > s.red ? 'text-6xl text-blue-700' : s.opp < s.red ? 'text-5xl text-blue-800/55' : 'text-5xl text-blue-800'}`}>{fmtPts(s.opp)}</div></div>
           </div>
           <div className="h-2.5 rounded-full overflow-hidden bg-slate-200 flex">
             <div className="bg-red-700 h-full transition-all duration-500" style={{ width: redPct + '%' }} />
